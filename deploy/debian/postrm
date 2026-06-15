@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+case "$1" in
+  remove)
+    systemctl daemon-reload >/dev/null 2>&1 || true
+    ;;
+  purge)
+    systemctl disable eusei >/dev/null 2>&1 || true
+    rm -f /etc/eusei.env
+    systemctl daemon-reload >/dev/null 2>&1 || true
+    # o usuário de sistema 'eusei' é mantido (conservador)
+    ;;
+esac
+exit 0

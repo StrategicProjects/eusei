@@ -1,9 +1,13 @@
 [package]
 name = "eusei"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "API HTTP/JSON para os Web Services SOAP do SEI (espelha o pacote R rsei)"
 license = "GPL-3.0-or-later"
+repository = "https://github.com/StrategicProjects/eusei"
+homepage = "https://github.com/StrategicProjects/eusei"
+readme = "README.md"
+authors = ["André Leite <leite@castlab.org>"]
 
 [dependencies]
 axum = "0.8"
@@ -25,3 +29,25 @@ subtle = "2.6"
 strip = true
 lto = true
 codegen-units = 1
+
+# ---- empacotamento .deb (cargo-deb) ----
+[package.metadata.deb]
+maintainer = "André Leite <leite@castlab.org>"
+copyright = "2026, Strategic Projects — GPL-3.0-or-later"
+license-file = ["LICENSE", "0"]
+section = "net"
+priority = "optional"
+depends = "$auto"
+extended-description = """\
+API HTTP/JSON read-only sobre os Web Services SOAP do SEI. Expõe consultas de \
+processos, documentos, andamentos e listas em JSON, com autenticação por Bearer \
+token. Configurável por /etc/eusei.env; serve a si própria (landing + docs) sem \
+dependências externas."""
+assets = [
+    ["target/release/eusei", "usr/bin/", "755"],
+    ["deploy/debian/eusei.service", "lib/systemd/system/eusei.service", "644"],
+    ["deploy/eusei.nginx.conf", "usr/share/eusei/eusei.nginx.conf", "644"],
+    [".env.example", "usr/share/eusei/eusei.env.example", "644"],
+    ["README.md", "usr/share/doc/eusei/README.md", "644"],
+]
+maintainer-scripts = "deploy/debian"

@@ -1,0 +1,37 @@
+#!/bin/sh
+# postinst do pacote eusei: cria o usuário de sistema, gera /etc/eusei.env com
+# um token aleatório (se ausente) e habilita o serviço (sem iniciar — requer
+# SEI_IDENTIFICACAO_SERVICO configurado).
+set -e
+
+case "$1" in
+  configure)
+    if ! getent passwd eusei >/dev/null 2>&1; then
+      useradd --system --no-create-home --shell /usr/sbin/nologin eusei \
+        || adduser --system --no-create-home --group eusei \
+        || true
+    fi
+
+    if [ ! -f /etc/eusei.env ]; then
+      TOKEN="$(head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | cut -c1-43)"
+      cat > /etc/eusei.env <<EOF
+EUSEI_BIND=127.0.0.1:18088
+EUSEI_TOKENS=${TOKEN}
+# Obrigatório: identificação/chave de acesso do serviço no SEI
+SEI_IDENTIFICACAO_SERVICO=
+# Opcionais (têm defaults compilados): SEI_URL, SEI_SIGLA_SISTEMA, SEI_ID_UNIDADE
+# SIP (opcional): SEI_SIP_CHAVE_ACESSO, SEI_SIP_ID_SISTEMA
+RUST_LOG=eusei=info,tower_http=warn
+EOF
+      chown eusei:eusei /etc/eusei.env 2>/dev/null || true
+      chmod 600 /etc/eusei.env
+      echo "eusei: /etc/eusei.env criado — TOKEN gerado: ${TOKEN}"
+      echo "eusei: defina SEI_IDENTIFICACAO_SERVICO em /etc/eusei.env e rode: systemctl start eusei"
+    fi
+
+    systemctl daemon-reload >/dev/null 2>&1 || true
+    systemctl enable eusei >/dev/null 2>&1 || true
+    ;;
+esac
+
+exit 0

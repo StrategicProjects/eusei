@@ -1,0 +1,26 @@
+[Unit]
+Description=eusei - API JSON dos Web Services do SEI
+Documentation=https://github.com/StrategicProjects/eusei
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=eusei
+Group=eusei
+EnvironmentFile=/etc/eusei.env
+ExecStart=/usr/bin/eusei
+Restart=on-failure
+RestartSec=3
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target
