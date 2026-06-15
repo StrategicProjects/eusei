@@ -1,5 +1,5 @@
 //! eusei — API HTTP/JSON para os Web Services SOAP do SEI.
-//! Roda no boxdev (único host com acesso liberado ao SEI pelo firewall) e
+//! Roda no servidor de aplicação (único host com acesso liberado ao SEI) e
 //! expõe consultas read-only espelhando o pacote R `rsei`.
 
 mod auth;

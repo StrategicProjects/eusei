@@ -3,7 +3,7 @@
 #
 # Uso:
 #   EUSEI_TOKEN=seu-token bash tests/smoke.sh
-#   EUSEI_TOKEN=... EUSEI_BASE=http://127.0.0.1:18088 bash tests/smoke.sh   # interno no boxdev
+#   EUSEI_TOKEN=... EUSEI_BASE=http://127.0.0.1:18088 bash tests/smoke.sh   # interno no servidor
 #
 # Requer: curl. (jq é opcional — se existir, o JSON sai formatado.)
 

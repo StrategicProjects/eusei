@@ -1,10 +1,10 @@
 # Plano — `eusei`: API HTTP/JSON para os Web Services do SEI
 
-Serviço em **Rust (axum)** que roda no servidor **boxdev** (único com acesso
+Serviço em **Rust (axum)** que roda no servidor **servidor** (único com acesso
 liberado ao SEI pelo firewall institucional), recebe consultas de processos por
 HTTP e devolve **JSON**. Os endpoints espelham as funções de consulta do pacote R
 [`rsei`](../rsei). Publicado externamente em
-`https://monitoramento.sepe.pe.gov.br/eusei/...` via **nginx → systemd** no boxdev.
+`https://monitoramento.sepe.pe.gov.br/eusei/...` via **nginx → systemd** no servidor.
 
 ## Decisões acordadas
 
@@ -14,7 +14,7 @@ HTTP e devolve **JSON**. Os endpoints espelham as funções de consulta do pacot
 | Escopo v1 | **Somente consultas read-only** (consultar_* + listar_*) |
 | Autenticação | **Bearer tokens estáticos** (header `Authorization: Bearer <token>`) |
 | Chave SEI | Fixa no servidor (`SEI_IDENTIFICACAO_SERVICO`), nunca exposta ao cliente |
-| Deploy | **systemd nativo** no boxdev + **nginx** como reverse proxy em `/eusei` |
+| Deploy | **systemd nativo** no servidor + **nginx** como reverse proxy em `/eusei` |
 
 ## Como o SEI funciona (resumo do manual + do rsei)
 
@@ -26,8 +26,8 @@ HTTP e devolve **JSON**. Os endpoints espelham as funções de consulta do pacot
   `xmlns:sei="Sei"`, operação com `soapenv:encodingStyle=".../soap/encoding/"`,
   parâmetros como `<Param xsi:type="xsd:string">valor</Param>`.
 - Erros vêm como **SOAP Fault** (às vezes em HTTP 500) com `faultcode`/`faultstring`.
-- **Acesso restrito por IP**: só o boxdev consegue falar com o SEI. Por isso build
-  e testes de integração rodam no boxdev.
+- **Acesso restrito por IP**: só o servidor consegue falar com o SEI. Por isso build
+  e testes de integração rodam no servidor.
 
 ## Arquitetura (camadas — espelham o rsei)
 
@@ -60,7 +60,7 @@ eusei/
 │   ├── eusei.service           # unit systemd (User, EnvironmentFile, ExecStart)
 │   └── nginx-eusei.conf        # location /eusei { proxy_pass 127.0.0.1:18088 }
 └── tests/
-    └── fixtures/               # XMLs reais capturados do boxdev (offline)
+    └── fixtures/               # XMLs reais capturados do servidor (offline)
 ```
 
 ### Crates
@@ -111,7 +111,7 @@ SEI_TIMEOUT_SECS=60
 RUST_LOG=eusei=info,tower_http=info
 ```
 
-## Deploy (boxdev)
+## Deploy (servidor)
 
 1. **nginx** (host) — `location /eusei/ { proxy_pass http://127.0.0.1:18088/; ... }`
    com `proxy_set_header` padrão; TLS terminado no domínio
@@ -123,12 +123,12 @@ RUST_LOG=eusei=info,tower_http=info
 
 ## Ciclo de desenvolvimento (igual ao rsei)
 
-Só o boxdev fala com o SEI **e** compila o binário Linux de destino:
+Só o servidor fala com o SEI **e** compila o binário Linux de destino:
 1. Editar local (mac).
-2. `rsync` do código → `boxdev:~/eusei_dev/` (excluindo `target/`, `.git`).
-3. No boxdev: `cargo build --release` e `cargo test` (rustup necessário no boxdev).
+2. `rsync` do código → `servidor:~/eusei_dev/` (excluindo `target/`, `.git`).
+3. No servidor: `cargo build --release` e `cargo test` (rustup necessário no servidor).
 4. Testes de integração read-only contra `sei.pe.gov.br`; unit tests offline com
-   fixtures (XMLs reais já presentes no home do boxdev: `unidades.xml`, `text2.xml`,
+   fixtures (XMLs reais já presentes no home do servidor: `unidades.xml`, `text2.xml`,
    `consultaProcd.xml`, `consultaPublic.xml`, `consultaDocument.xml`).
 5. Deploy: copiar `target/release/eusei` → `/opt/eusei/`, `systemctl restart eusei`.
 
@@ -136,19 +136,19 @@ Só o boxdev fala com o SEI **e** compila o binário Linux de destino:
 
 | Fase | Entrega | Validação | Status |
 |------|---------|-----------|--------|
-| 0 | Scaffold Cargo + axum + `/health` + config por env + rsync→boxdev | `cargo run` no boxdev; `curl /health` | ✅ |
+| 0 | Scaffold Cargo + axum + `/health` + config por env + rsync→servidor | `cargo run` no servidor; `curl /health` | ✅ |
 | 1 | `soap::envelope` + `soap::client` (SOAP Fault, timeout) | unit test envelope; chamada read-only | ✅ |
 | 2 | `soap::parse` (mapeador genérico XML→JSON) + parser de `consultarProcedimento` | unit tests com fixtures reais → JSON | ✅ |
-| 3 | Endpoints `/procedimento(s)`, `/documento`, `/publicacao`, `/bloco`, `/procedimento-individual` + auth Bearer | integração read-only no boxdev | ✅ |
+| 3 | Endpoints `/procedimento(s)`, `/documento`, `/publicacao`, `/bloco`, `/procedimento-individual` + auth Bearer | integração read-only no servidor | ✅ |
 | 4 | Endpoints `listar_*` | integração read-only (listarPaises ok) | ✅ |
 | 5 | `deploy/eusei.service` + `deploy/nginx-eusei.conf` + README de operação | `systemctl` ativo; acesso por `/eusei` | ✅ |
 | 6 | `listarAndamentos` (params array no envelope) + `documentos-processo` + lote de documentos + OpenAPI/Redoc em `/__docs__` | 8/8 testes; docs validadas live | ✅* |
 
 \* Fase 6: código completo, 8/8 testes offline, docs (`/__docs__`, `/openapi.json`,
 `/redoc.standalone.js` vendorizado) validadas em produção. A validação **live** de
-`andamentos`/`documentos-processo` ficou pendente porque o acesso boxdev→SEI foi
+`andamentos`/`documentos-processo` ficou pendente porque o acesso servidor→SEI foi
 bloqueado pelo firewall institucional no meio da sessão (ver memory
-`boxdev-sei-firewall`) — não é bug do eusei; endpoints SEI-independentes seguem ok.
+`servidor-sei-firewall`) — não é bug do eusei; endpoints SEI-independentes seguem ok.
 
 ### Read-only — todos implementados ✅
 - `publicacoes-processo` (heurística sobre documentos do processo; consultas
@@ -160,14 +160,14 @@ bloqueado pelo firewall institucional no meio da sessão (ver memory
 - Landing em **Tailwind CSS v4** (`/`) + referência **Redoc** (`/__docs__`),
   ambos vendorizados no binário (sem CDN).
 
-**Validado em produção (2026-06-15, boxdev → sei.pe.gov.br):** 401 sem token;
+**Validado em produção (2026-06-15, servidor → sei.pe.gov.br):** 401 sem token;
 `/v1/paises` (array, UTF-8 ok); `/v1/procedimento/{real}` (objeto completo,
 `xsi:nil`→null, arrays vazias→`[]`); protocolo inexistente → SOAP Fault → HTTP 400
 com `detalhe` legível.
 
 ## Riscos / a confirmar
 
-- **Rust no boxdev**: instalar `rustup`/toolchain (ou cross-compilar musl do mac —
+- **Rust no servidor**: instalar `rustup`/toolchain (ou cross-compilar musl do mac —
   mais trabalhoso). Pré-requisito da Fase 0.
 - **TLS e DNS de `monitoramento.sepe.pe.gov.br/eusei`**: quem controla o nginx/
   certificado e se o path `/eusei` está livre — alinhar com a infra.

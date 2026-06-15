@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# eusei — instalação/atualização no boxdev (Fase 5). Rode como:
+# eusei — instalação/atualização no servidor (Fase 5). Rode como:
 #   sudo bash 02-deploy-sudo.sh
 #
 # Idempotente. O que faz:

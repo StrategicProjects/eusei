@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# eusei — pré-requisitos de sistema no boxdev (Fase 0).
-# Rode no boxdev como:  sudo bash 01-prereqs-sudo.sh
+# eusei — pré-requisitos de sistema no servidor (Fase 0).
+# Rode no servidor como:  sudo bash 01-prereqs-sudo.sh
 #
 # O que faz (idempotente):
 #   - Instala o toolchain de compilação C necessário para o linker do Rust

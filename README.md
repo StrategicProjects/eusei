@@ -18,7 +18,7 @@
 </p>
 
 A **eusei** traduz os Web Services SOAP do SEI (Sistema Eletrônico de Informações)
-em JSON. Roda no servidor **boxdev** — o único com acesso liberado ao SEI pelo
+em JSON. Roda no servidor **servidor** — o único com acesso liberado ao SEI pelo
 firewall institucional — e espelha as consultas do pacote R
 [`rsei`](https://github.com/StrategicProjects/rsei). Publicada em
 `https://monitoramento.sepe.pe.gov.br/eusei/`.
@@ -34,14 +34,14 @@ Veja [`PLAN.md`](PLAN.md) para a arquitetura e o roadmap.
 
 ## Desenvolvimento
 
-Só o boxdev fala com o SEI e compila o binário Linux de destino. Ciclo:
+Só o servidor fala com o SEI e compila o binário Linux de destino. Ciclo:
 
 ```sh
 # 1. editar local (mac)
-# 2. sincronizar para o boxdev
-rsync -az --delete --exclude target --exclude .git ./ boxdev:~/eusei_dev/
-# 3. no boxdev
-ssh boxdev 'cd ~/eusei_dev && ~/.cargo/bin/cargo build && cp .env.example .env && ~/.cargo/bin/cargo run'
+# 2. sincronizar para o servidor
+rsync -az --delete --exclude target --exclude .git ./ servidor:~/eusei_dev/
+# 3. no servidor
+ssh servidor 'cd ~/eusei_dev && ~/.cargo/bin/cargo build && cp .env.example .env && ~/.cargo/bin/cargo run'
 ```
 
 ## Configuração
@@ -49,6 +49,12 @@ ssh boxdev 'cd ~/eusei_dev && ~/.cargo/bin/cargo build && cp .env.example .env &
 Veja [`.env.example`](.env.example). Em produção, as variáveis vêm de
 `/etc/eusei.env` via systemd. A chave de acesso do SEI
 (`SEI_IDENTIFICACAO_SERVICO`) fica só no servidor e nunca é exposta ao cliente.
+
+> **Funciona com qualquer instância do SEI.** O endpoint, a sigla e a chave são
+> 100% configuráveis (`SEI_URL`, `SEI_SIGLA_SISTEMA`, `SEI_IDENTIFICACAO_SERVICO`,
+> `SEI_ID_UNIDADE` e `SEI_SIP_*`). Os defaults apontam para o SEI de Pernambuco,
+> mas o envelope SOAP e as operações são padrão do SEI — basta apontar `SEI_URL`
+> para outra instalação. Nada de específico do PE está embutido no código.
 
 ## Autenticação
 
