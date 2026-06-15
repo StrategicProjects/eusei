@@ -19,10 +19,9 @@
 </p>
 
 A **eusei** traduz os Web Services SOAP do SEI (Sistema Eletrônico de Informações)
-em JSON. Roda no servidor **servidor** — o único com acesso liberado ao SEI pelo
-firewall institucional — e espelha as consultas do pacote R
-[`rsei`](https://github.com/StrategicProjects/rsei). Publicada em
-`https://SEU-DOMINIO/eusei/`.
+em JSON. Roda em um servidor com acesso liberado ao SEI e espelha as consultas do
+pacote R [`rsei`](https://github.com/StrategicProjects/rsei). Atrás de um nginx,
+fica acessível em `https://SEU-DOMINIO/eusei/`.
 
 Veja [`PLAN.md`](PLAN.md) para a arquitetura e o roadmap.
 
@@ -35,20 +34,44 @@ Veja [`PLAN.md`](PLAN.md) para a arquitetura e o roadmap.
 
 ## Instalação
 
-**Debian/Ubuntu (`.deb`)** — recomendado em produção:
+Os artefatos saem prontos em cada [release](https://github.com/StrategicProjects/eusei/releases)
+(o CI gera e anexa automaticamente nas tags `v*`):
+
+| Artefato | Para quê |
+|----------|----------|
+| `eusei_<versão>_amd64.deb` | Debian/Ubuntu amd64 (glibc ≥ 2.35) — produção |
+| `eusei-linux-x86_64` | binário avulso (Ubuntu 22.04) |
+| fórmula Homebrew | macOS/Linux (compila do fonte) — uso local/dev |
+
+### 1. Debian/Ubuntu — pacote `.deb` (recomendado)
 
 ```sh
-# baixe o .deb da última release e instale
-sudo apt install ./eusei_0.2.0-1_amd64.deb
-# o pacote cria o usuário, gera /etc/eusei.env com um token e habilita o serviço
-sudo nano /etc/eusei.env          # defina SEI_IDENTIFICACAO_SERVICO (e o que precisar)
-sudo systemctl start eusei
+# baixar o .deb da última release (precisa do gh CLI)
+gh release download --repo StrategicProjects/eusei --pattern '*.deb'
+# … ou baixe manualmente em /releases/latest
+
+sudo apt install ./eusei_*_amd64.deb
 ```
 
-O pacote instala o binário em `/usr/bin/eusei`, a unit `eusei.service`, e modelos
-do nginx/env em `/usr/share/eusei/`.
+O pacote, via `postinst`, **cria o usuário de sistema** `eusei`, **gera
+`/etc/eusei.env` com um token aleatório** (impresso uma vez) e **habilita** o
+serviço (sem iniciar). Em seguida:
 
-**Homebrew (macOS/Linux)** — uso local/dev:
+```sh
+sudo nano /etc/eusei.env      # defina SEI_IDENTIFICACAO_SERVICO (e SEI_URL/SIGLA se não for o PE)
+sudo systemctl start eusei
+curl -s http://127.0.0.1:18088/health
+```
+
+Conteúdo instalado: binário em `/usr/bin/eusei`, unit `eusei.service`, e os
+modelos `eusei.env.example` / `eusei.nginx.conf` em `/usr/share/eusei/`. Para
+expor publicamente, inclua o snippet do nginx
+([`deploy/eusei.nginx.conf`](deploy/eusei.nginx.conf)).
+
+Atualizar: baixe o `.deb` novo e `sudo apt install ./eusei_*_amd64.deb` (o
+`/etc/eusei.env` é preservado). Remover: `sudo apt remove eusei` (ou `purge`).
+
+### 2. Homebrew (macOS / Linux) — uso local/dev
 
 ```sh
 brew tap StrategicProjects/eusei https://github.com/StrategicProjects/eusei
@@ -56,8 +79,15 @@ brew install eusei
 EUSEI_TOKENS=meu-token SEI_IDENTIFICACAO_SERVICO=minha-chave eusei
 ```
 
-**Binário avulso**: baixe `eusei-linux-x86_64` da release e configure `/etc/eusei.env`
-manualmente (ou use [`deploy/02-deploy-sudo.sh`](deploy/02-deploy-sudo.sh)).
+A fórmula compila do fonte (precisa do Rust, instalado como dependência de build).
+É voltada a execução manual/dev — para servidor de produção, prefira o `.deb`.
+
+### 3. Binário avulso
+
+Baixe `eusei-linux-x86_64` da release, coloque em `/usr/local/bin/eusei`, crie
+`/etc/eusei.env` (modelo em [`.env.example`](.env.example)) e rode. O script
+[`deploy/02-deploy-sudo.sh`](deploy/02-deploy-sudo.sh) automatiza usuário, env,
+systemd e o proxy nginx (defina `EUSEI_NGINX_SITE`).
 
 ## Desenvolvimento
 
