@@ -32,6 +32,32 @@ Veja [`PLAN.md`](PLAN.md) para a arquitetura e o roadmap.
 - **Falha graciosa**: erros com `codigo` estável e mensagens claras (incl. “SEI indisponível”).
 - **Seguro**: Bearer token; a chave do SEI nunca é exposta ao cliente.
 
+## Instalação
+
+**Debian/Ubuntu (`.deb`)** — recomendado em produção:
+
+```sh
+# baixe o .deb da última release e instale
+sudo apt install ./eusei_0.2.0-1_amd64.deb
+# o pacote cria o usuário, gera /etc/eusei.env com um token e habilita o serviço
+sudo nano /etc/eusei.env          # defina SEI_IDENTIFICACAO_SERVICO (e o que precisar)
+sudo systemctl start eusei
+```
+
+O pacote instala o binário em `/usr/bin/eusei`, a unit `eusei.service`, e modelos
+do nginx/env em `/usr/share/eusei/`.
+
+**Homebrew (macOS/Linux)** — uso local/dev:
+
+```sh
+brew tap StrategicProjects/eusei https://github.com/StrategicProjects/eusei
+brew install eusei
+EUSEI_TOKENS=meu-token SEI_IDENTIFICACAO_SERVICO=minha-chave eusei
+```
+
+**Binário avulso**: baixe `eusei-linux-x86_64` da release e configure `/etc/eusei.env`
+manualmente (ou use [`deploy/02-deploy-sudo.sh`](deploy/02-deploy-sudo.sh)).
+
 ## Desenvolvimento
 
 Só o servidor fala com o SEI e compila o binário Linux de destino. Ciclo:
