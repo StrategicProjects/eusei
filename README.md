@@ -21,7 +21,7 @@ A **eusei** traduz os Web Services SOAP do SEI (Sistema Eletrônico de Informaç
 em JSON. Roda no servidor **servidor** — o único com acesso liberado ao SEI pelo
 firewall institucional — e espelha as consultas do pacote R
 [`rsei`](https://github.com/StrategicProjects/rsei). Publicada em
-`https://monitoramento.sepe.pe.gov.br/eusei/`.
+`https://SEU-DOMINIO/eusei/`.
 
 Veja [`PLAN.md`](PLAN.md) para a arquitetura e o roadmap.
 
@@ -63,7 +63,7 @@ contra `EUSEI_TOKENS`.
 
 ## Uso
 
-Base pública: `https://monitoramento.sepe.pe.gov.br/eusei/`.
+Base pública: `https://SEU-DOMINIO/eusei/`.
 
 > **Importante:** consulte processo/documento/bloco pela **query string**
 > (`?protocolo=...`), não pelo path. A barra (`/`) do número do processo não
@@ -72,11 +72,11 @@ Base pública: `https://monitoramento.sepe.pe.gov.br/eusei/`.
 ```sh
 # consultar um processo (forma recomendada)
 curl -H 'Authorization: Bearer SEU-TOKEN' \
-  'https://monitoramento.sepe.pe.gov.br/eusei/v1/procedimento?protocolo=0011108545.000056/2022-49'
+  'https://SEU-DOMINIO/eusei/v1/procedimento?protocolo=0011108545.000056/2022-49'
 
 # listas
 curl -H 'Authorization: Bearer SEU-TOKEN' \
-  'https://monitoramento.sepe.pe.gov.br/eusei/v1/paises'
+  'https://SEU-DOMINIO/eusei/v1/paises'
 ```
 
 ### Endpoints
@@ -129,7 +129,7 @@ Exemplo (SEI fora do ar):
 
 ## Frontend
 
-- **Landing**: `https://monitoramento.sepe.pe.gov.br/eusei/` — página inicial em
+- **Landing**: `https://SEU-DOMINIO/eusei/` — página inicial em
   **Tailwind CSS v4** (CSS gerado/tree-shaken e embutido no binário, sem CDN), com
   hero, início rápido e cards de endpoints.
 - **Referência**: `…/eusei/__docs__` — documentação custom em Tailwind v4

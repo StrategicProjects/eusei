@@ -81,7 +81,7 @@
           </p>
           <div class="mt-5 inline-flex items-center gap-2 rounded-xl border border-ink/10 bg-white/60 px-4 py-2.5 font-mono text-sm">
             <span class="text-muted">base</span>
-            <span class="text-ink">https://monitoramento.sepe.pe.gov.br/eusei</span>
+            <span class="text-ink" id="base-url">/eusei</span>
           </div>
 
           <!-- diagrama: fluxo de requisição -->
@@ -341,6 +341,12 @@
   </div>
 
   <script>
+    // base dinâmica: mostra o host atual (sem fixar domínio no código)
+    (function () {
+      var el = document.getElementById('base-url');
+      if (el) el.textContent = location.origin + location.pathname.replace(/\/?__docs__\/?$/, '');
+    })();
+
     // realça o item do índice da seção visível
     const links = [...document.querySelectorAll('.nav-link')];
     const map = new Map(links.map(l => [l.getAttribute('href').slice(1), l]));

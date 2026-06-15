@@ -8,7 +8,7 @@
 # Requer: curl. (jq é opcional — se existir, o JSON sai formatado.)
 
 set -u
-BASE="${EUSEI_BASE:-https://monitoramento.sepe.pe.gov.br/eusei}"
+BASE="${EUSEI_BASE:-http://127.0.0.1:18088}"   # ajuste p/ a URL pública: EUSEI_BASE=https://SEU-DOMINIO/eusei
 TOKEN="${EUSEI_TOKEN:?defina EUSEI_TOKEN=...}"
 AUTH=(-H "Authorization: Bearer ${TOKEN}")
 

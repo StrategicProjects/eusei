@@ -4,7 +4,7 @@ Serviço em **Rust (axum)** que roda no servidor **servidor** (único com acesso
 liberado ao SEI pelo firewall institucional), recebe consultas de processos por
 HTTP e devolve **JSON**. Os endpoints espelham as funções de consulta do pacote R
 [`rsei`](../rsei). Publicado externamente em
-`https://monitoramento.sepe.pe.gov.br/eusei/...` via **nginx → systemd** no servidor.
+`https://SEU-DOMINIO/eusei/...` via **nginx → systemd** no servidor.
 
 ## Decisões acordadas
 
@@ -74,7 +74,7 @@ eusei/
 
 ## Endpoints (espelhando o `rsei`)
 
-Prefixo de versão `/v1`. Externamente: `https://monitoramento.sepe.pe.gov.br/eusei/v1/...`
+Prefixo de versão `/v1`. Externamente: `https://SEU-DOMINIO/eusei/v1/...`
 (nginx encaminha `/eusei/` → `127.0.0.1:18088/`). Todos exigem `Authorization: Bearer`,
 exceto `/health`.
 
@@ -115,7 +115,7 @@ RUST_LOG=eusei=info,tower_http=info
 
 1. **nginx** (host) — `location /eusei/ { proxy_pass http://127.0.0.1:18088/; ... }`
    com `proxy_set_header` padrão; TLS terminado no domínio
-   `monitoramento.sepe.pe.gov.br` (já existente / a confirmar com infra).
+   `SEU-DOMINIO` (já existente / a confirmar com infra).
 2. **systemd** — `eusei.service`: `EnvironmentFile=/etc/eusei.env`,
    `ExecStart=/opt/eusei/eusei`, `User=eusei`, `Restart=on-failure`. Bind em
    `127.0.0.1` (só nginx acessa de fora).
@@ -169,7 +169,7 @@ com `detalhe` legível.
 
 - **Rust no servidor**: instalar `rustup`/toolchain (ou cross-compilar musl do mac —
   mais trabalhoso). Pré-requisito da Fase 0.
-- **TLS e DNS de `monitoramento.sepe.pe.gov.br/eusei`**: quem controla o nginx/
+- **TLS e DNS de `SEU-DOMINIO/eusei`**: quem controla o nginx/
   certificado e se o path `/eusei` está livre — alinhar com a infra.
 - **Encoding**: round-trip latin1/utf-8 nas respostas do SEI (o rsei força utf-8).
 - **Mapeamento XML→JSON**: decidir saída "fiel ao SEI" (nomes originais) vs

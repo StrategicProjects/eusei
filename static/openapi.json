@@ -11,7 +11,7 @@
     "description": "API HTTP/JSON read-only sobre os Web Services SOAP do SEI (Sistema Eletrônico de Informações) do governo de Pernambuco. Espelha as consultas do pacote R `rsei`. Roda no servidor de aplicação (único com acesso liberado ao SEI) e é publicada via nginx.\n\n**Autenticação:** todas as rotas `/v1/*` exigem o cabeçalho `Authorization: Bearer <token>`.\n\n**Protocolos com barra:** consulte processos/documentos/blocos pela query string (`?protocolo=...`); a barra do número não sobrevive como `%2F` no path através do proxy."
   },
   "servers": [
-    { "url": "https://monitoramento.sepe.pe.gov.br/eusei", "description": "Produção (via nginx corporativo)" },
+    { "url": "/eusei", "description": "Produção (atrás do nginx, relativo ao host)" },
     { "url": "http://127.0.0.1:18088", "description": "Interno (servidor)" }
   ],
   "security": [{ "bearerAuth": [] }],

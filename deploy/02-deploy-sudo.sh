@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
 # eusei — instalação/atualização no servidor (Fase 5). Rode como:
-#   sudo bash 02-deploy-sudo.sh
+#   sudo EUSEI_NGINX_SITE=/etc/nginx/sites-available/SEU-SITE bash 02-deploy-sudo.sh
 #
 # Idempotente. O que faz:
 #   1. cria o usuário de sistema `eusei` (sem login);
 #   2. instala o binário release em /opt/eusei/eusei;
 #   3. cria /etc/eusei.env (se ausente) com a config (chmod 600);
 #   4. instala e ativa o serviço systemd `eusei` (bind 127.0.0.1:18088);
-#   5. instala o snippet nginx e o inclui no server block de
-#      monitoramento.sepe.pe.gov.br (backup + nginx -t antes de recarregar).
+#   5. instala o snippet nginx e o inclui no server block indicado por
+#      EUSEI_NGINX_SITE (backup + nginx -t antes de recarregar).
 #
-# Pré-requisito: ter compilado o release ANTES, como seu usuário (sem sudo):
-#   cd ~/eusei_dev && ~/.cargo/bin/cargo build --release
+# Pré-requisitos:
+#   - compilar o release ANTES (sem sudo): cd ~/eusei_dev && cargo build --release
+#   - definir EUSEI_NGINX_SITE com o arquivo do server block do nginx onde
+#     incluir o /eusei (ex.: /etc/nginx/sites-available/seu-dominio).
 
 set -euo pipefail
 
@@ -20,11 +22,11 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-DEV_USER="${SUDO_USER:-andre.leite}"
+DEV_USER="${SUDO_USER:?execute via sudo (precisa de SUDO_USER)}"
 DEV_HOME="$(eval echo "~${DEV_USER}")"
-DEV_DIR="${DEV_HOME}/eusei_dev"
+DEV_DIR="${EUSEI_DEV_DIR:-${DEV_HOME}/eusei_dev}"
 BIN_SRC="${DEV_DIR}/target/release/eusei"
-SITE="/etc/nginx/sites-available/monitoramento.sepe.pe.gov.br"
+SITE="${EUSEI_NGINX_SITE:?defina EUSEI_NGINX_SITE=/etc/nginx/sites-available/SEU-SITE}"
 SNIPPET_SRC="${DEV_DIR}/deploy/eusei.nginx.conf"
 UNIT_SRC="${DEV_DIR}/deploy/eusei.service"
 
@@ -90,8 +92,9 @@ else
   ts="$(date +%Y%m%d-%H%M%S 2>/dev/null || echo bak)"
   cp -a "$SITE" "${SITE}.bak-eusei-${ts}"
   tmp="$(mktemp)"
+  # insere o include logo após o primeiro server_name do arquivo escolhido
   awk '
-    /server_name[[:space:]]+monitoramento\.sepe\.pe\.gov\.br;/ && !done {
+    /^[[:space:]]*server_name[[:space:]]/ && !done {
       print; print "\tinclude snippets/eusei.conf;"; done=1; next
     }
     { print }
@@ -126,4 +129,4 @@ echo "== Pronto. Valide: =="
 echo "  systemctl status eusei --no-pager"
 echo "  curl -s http://127.0.0.1:18088/health"
 echo "  curl -s -H 'Authorization: Bearer SEU-TOKEN' http://127.0.0.1:18088/v1/paises | head -c 200"
-echo "  curl -s https://monitoramento.sepe.pe.gov.br/eusei/health   # via nginx corporativo"
+echo "  curl -s https://SEU-DOMINIO/eusei/health   # via nginx (host público)"
