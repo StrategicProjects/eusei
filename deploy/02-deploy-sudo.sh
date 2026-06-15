@@ -51,11 +51,13 @@ install -m 0755 "$BIN_SRC" /opt/eusei/eusei
 echo "  + binário instalado em /opt/eusei/eusei"
 
 # --- 3. /etc/eusei.env -----------------------------------------------------
+GEN_TOKEN=""
 if [[ ! -f /etc/eusei.env ]]; then
-  cat > /etc/eusei.env <<'ENV'
+  # Gera um token aleatório no install (sem janela de credencial padrão).
+  GEN_TOKEN="$(head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | cut -c1-43)"
+  cat > /etc/eusei.env <<ENV
 EUSEI_BIND=127.0.0.1:18088
-# TROQUE por tokens reais (separados por vírgula):
-EUSEI_TOKENS=TROQUE-ESTE-TOKEN
+EUSEI_TOKENS=${GEN_TOKEN}
 SEI_URL=https://sei.pe.gov.br/sei/ws/SeiWS.php
 SEI_SIGLA_SISTEMA=HORTENSIAS
 SEI_IDENTIFICACAO_SERVICO=publicacao
@@ -65,7 +67,7 @@ RUST_LOG=eusei=info,tower_http=warn
 ENV
   chown eusei:eusei /etc/eusei.env
   chmod 600 /etc/eusei.env
-  echo "  + /etc/eusei.env criado (EDITE EUSEI_TOKENS antes de usar em produção)"
+  echo "  + /etc/eusei.env criado com um TOKEN gerado (anote — só aparece agora)."
 else
   echo "  = /etc/eusei.env já existe (mantido)"
 fi
@@ -112,6 +114,14 @@ else
 fi
 
 echo
+if [[ -n "$GEN_TOKEN" ]]; then
+  echo "============================================================"
+  echo "  TOKEN gerado (Bearer dos clientes) — anote agora:"
+  echo "      ${GEN_TOKEN}"
+  echo "  Guardado em /etc/eusei.env (chmod 600). Não será exibido de novo."
+  echo "============================================================"
+  echo
+fi
 echo "== Pronto. Valide: =="
 echo "  systemctl status eusei --no-pager"
 echo "  curl -s http://127.0.0.1:18088/health"

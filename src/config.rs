@@ -61,6 +61,13 @@ impl AppConfig {
         if tokens.is_empty() {
             return Err("EUSEI_TOKENS vazio: defina ao menos um token Bearer.".into());
         }
+        // Recusa subir com o token de exemplo/placeholder (defesa em profundidade).
+        if tokens.iter().any(|t| t.to_uppercase().starts_with("TROQUE")) {
+            return Err(
+                "EUSEI_TOKENS contém um token placeholder ('TROQUE...'): defina um token real."
+                    .into(),
+            );
+        }
 
         let identificacao_servico = get("SEI_IDENTIFICACAO_SERVICO", "");
         if identificacao_servico.is_empty() {
