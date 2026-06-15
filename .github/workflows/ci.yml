@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+
+# evita rodar duas vezes (push + PR) e cancela execuções antigas do mesmo ref
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: build & test
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Testes
+        run: cargo test --locked
+      - name: Build (release)
+        run: cargo build --release --locked
+
+  release:
+    name: empacota & publica (.deb + binário)
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Instala cargo-deb
+        run: cargo install cargo-deb --locked
+      - name: Build release + .deb
+        run: |
+          cargo build --release --locked
+          cargo deb --no-build
+      - name: Reúne artefatos
+        run: |
+          mkdir -p dist
+          cp target/release/eusei dist/eusei-linux-x86_64
+          cp target/debian/*.deb dist/
+          ls -lh dist
+      - name: Publica release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/eusei-linux-x86_64
+            dist/*.deb
+          generate_release_notes: true

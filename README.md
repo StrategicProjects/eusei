@@ -8,6 +8,7 @@
 </p>
 
 <p align="center">
+  <img src="https://github.com/StrategicProjects/eusei/actions/workflows/ci.yml/badge.svg" alt="CI"/>
   <img src="https://img.shields.io/badge/rust-1.96-0b5848" alt="rust"/>
   <img src="https://img.shields.io/badge/api-read--only-0e6e5c" alt="read-only"/>
   <img src="https://img.shields.io/badge/license-GPL--3.0-555" alt="license"/>
