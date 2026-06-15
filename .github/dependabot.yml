@@ -1,0 +1,17 @@
+version: 2
+updates:
+  # Atualizações das GitHub Actions (sugere novos SHAs para revisão)
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
+
+  # Atualizações das dependências Rust (Cargo)
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: deps
