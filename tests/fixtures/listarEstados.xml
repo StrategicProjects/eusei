@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="Sei" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xmime="http://www.w3.org/2005/05/xmlmime" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+  <SOAP-ENV:Body>
+    <ns1:listarEstadosResponse>
+      <parametros SOAP-ENC:arrayType="ns1:Estado[53]" xsi:type="ns1:ArrayOfEstado">
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">45</IdEstado>
+          <IdPais xsi:type="xsd:string">840</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">FLORIDA</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">28</IdEstado>
+          <IdPais xsi:type="xsd:string">604</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">Peru</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">42</IdEstado>
+          <IdPais xsi:type="xsd:string">624</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">PE</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">41</IdEstado>
+          <IdPais xsi:type="xsd:string">620</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">-</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">36</IdEstado>
+          <IdPais xsi:type="xsd:string">840</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">Florida</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">30</IdEstado>
+          <IdPais xsi:type="xsd:string">96</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">Brunei</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">46</IdEstado>
+          <IdPais xsi:type="xsd:string">554</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">Wellington</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">39</IdEstado>
+          <IdPais xsi:type="xsd:string">72</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">Pe</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">38</IdEstado>
+          <IdPais xsi:type="xsd:string">620</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">Leiria</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">29</IdEstado>
+          <IdPais xsi:type="xsd:string">32</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">cordoba</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">52</IdEstado>
+          <IdPais xsi:type="xsd:string">64</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">Spp</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">50</IdEstado>
+          <IdPais xsi:type="xsd:string">124</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">Canadá</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">49</IdEstado>
+          <IdPais xsi:type="xsd:string">32</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">CORDOBA</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">47</IdEstado>
+          <IdPais xsi:type="xsd:string">604</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">Pe</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">43</IdEstado>
+          <IdPais xsi:type="xsd:string">620</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">Pe</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">35</IdEstado>
+          <IdPais xsi:type="xsd:string">620</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">AVEIRO</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">34</IdEstado>
+          <IdPais xsi:type="xsd:string">854</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">SP</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">32</IdEstado>
+          <IdPais xsi:type="xsd:string">96</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">Pe</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">54</IdEstado>
+          <IdPais xsi:type="xsd:string">96</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">AL</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">53</IdEstado>
+          <IdPais xsi:type="xsd:string">840</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">California</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">44</IdEstado>
+          <IdPais xsi:type="xsd:string">36</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">Victoria</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">40</IdEstado>
+          <IdPais xsi:type="xsd:string">484</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">Nuevo León</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">37</IdEstado>
+          <IdPais xsi:type="xsd:string">620</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">Portugal</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">33</IdEstado>
+          <IdPais xsi:type="xsd:string">96</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">P</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">31</IdEstado>
+          <IdPais xsi:type="xsd:string">96</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">PE</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">48</IdEstado>
+          <IdPais xsi:type="xsd:string">204</IdPais>
+          <Sigla xsi:nil="true"/>
+          <Nome xsi:type="xsd:string">DF</Nome>
+          <CodigoIbge xsi:nil="true"/>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">2</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">AC</Sigla>
+          <Nome xsi:type="xsd:string">Acre</Nome>
+          <CodigoIbge xsi:type="xsd:string">12</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">14</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">AL</Sigla>
+          <Nome xsi:type="xsd:string">Alagoas</Nome>
+          <CodigoIbge xsi:type="xsd:string">27</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">3</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">AM</Sigla>
+          <Nome xsi:type="xsd:string">Amazonas</Nome>
+          <CodigoIbge xsi:type="xsd:string">13</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">6</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">AP</Sigla>
+          <Nome xsi:type="xsd:string">Amapá</Nome>
+          <CodigoIbge xsi:type="xsd:string">16</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">16</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">BA</Sigla>
+          <Nome xsi:type="xsd:string">Bahia</Nome>
+          <CodigoIbge xsi:type="xsd:string">29</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">10</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">CE</Sigla>
+          <Nome xsi:type="xsd:string">Ceará</Nome>
+          <CodigoIbge xsi:type="xsd:string">23</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">27</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">DF</Sigla>
+          <Nome xsi:type="xsd:string">Distrito Federal</Nome>
+          <CodigoIbge xsi:type="xsd:string">53</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">18</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">ES</Sigla>
+          <Nome xsi:type="xsd:string">Espírito Santo</Nome>
+          <CodigoIbge xsi:type="xsd:string">32</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">26</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">GO</Sigla>
+          <Nome xsi:type="xsd:string">Goiás</Nome>
+          <CodigoIbge xsi:type="xsd:string">52</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">8</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">MA</Sigla>
+          <Nome xsi:type="xsd:string">Maranhão</Nome>
+          <CodigoIbge xsi:type="xsd:string">21</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">17</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">MG</Sigla>
+          <Nome xsi:type="xsd:string">Minas Gerais</Nome>
+          <CodigoIbge xsi:type="xsd:string">31</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">24</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">MS</Sigla>
+          <Nome xsi:type="xsd:string">Mato Grosso do Sul</Nome>
+          <CodigoIbge xsi:type="xsd:string">50</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">25</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">MT</Sigla>
+          <Nome xsi:type="xsd:string">Mato Grosso</Nome>
+          <CodigoIbge xsi:type="xsd:string">51</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">5</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">PA</Sigla>
+          <Nome xsi:type="xsd:string">Pará</Nome>
+          <CodigoIbge xsi:type="xsd:string">15</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">12</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">PB</Sigla>
+          <Nome xsi:type="xsd:string">Paraíba</Nome>
+          <CodigoIbge xsi:type="xsd:string">25</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">13</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">PE</Sigla>
+          <Nome xsi:type="xsd:string">Pernambuco</Nome>
+          <CodigoIbge xsi:type="xsd:string">26</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">9</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">PI</Sigla>
+          <Nome xsi:type="xsd:string">Piauí</Nome>
+          <CodigoIbge xsi:type="xsd:string">22</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">21</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">PR</Sigla>
+          <Nome xsi:type="xsd:string">Paraná</Nome>
+          <CodigoIbge xsi:type="xsd:string">41</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">19</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">RJ</Sigla>
+          <Nome xsi:type="xsd:string">Rio de Janeiro</Nome>
+          <CodigoIbge xsi:type="xsd:string">33</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">11</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">RN</Sigla>
+          <Nome xsi:type="xsd:string">Rio Grande do Norte</Nome>
+          <CodigoIbge xsi:type="xsd:string">24</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">1</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">RO</Sigla>
+          <Nome xsi:type="xsd:string">Rondônia</Nome>
+          <CodigoIbge xsi:type="xsd:string">11</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">4</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">RR</Sigla>
+          <Nome xsi:type="xsd:string">Roraima</Nome>
+          <CodigoIbge xsi:type="xsd:string">14</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">23</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">RS</Sigla>
+          <Nome xsi:type="xsd:string">Rio Grande do Sul</Nome>
+          <CodigoIbge xsi:type="xsd:string">43</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">22</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">SC</Sigla>
+          <Nome xsi:type="xsd:string">Santa Catarina</Nome>
+          <CodigoIbge xsi:type="xsd:string">42</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">15</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">SE</Sigla>
+          <Nome xsi:type="xsd:string">Sergipe</Nome>
+          <CodigoIbge xsi:type="xsd:string">28</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">20</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">SP</Sigla>
+          <Nome xsi:type="xsd:string">São Paulo</Nome>
+          <CodigoIbge xsi:type="xsd:string">35</CodigoIbge>
+        </item>
+        <item xsi:type="ns1:Estado">
+          <IdEstado xsi:type="xsd:string">7</IdEstado>
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Sigla xsi:type="xsd:string">TO</Sigla>
+          <Nome xsi:type="xsd:string">Tocantins</Nome>
+          <CodigoIbge xsi:type="xsd:string">17</CodigoIbge>
+        </item>
+      </parametros>
+    </ns1:listarEstadosResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

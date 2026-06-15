@@ -1,0 +1,213 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "eusei — API dos Web Services do SEI",
+    "version": "0.1.0",
+    "x-logo": {
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NCIgaGVpZ2h0PSI0NCIgdmlld0JveD0iMCAwIDQ0IDQ0Ij48cmVjdCB3aWR0aD0iNDQiIGhlaWdodD0iNDQiIHJ4PSIxMSIgZmlsbD0iIzBFNkU1QyIvPjxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0Y0RUZFMyIgc3Ryb2tlLXdpZHRoPSIyLjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PHBhdGggZD0iTTEzIDE2SDMxIi8+PHBhdGggZD0iTTEzIDIySDI3Ii8+PHBhdGggZD0iTTEzIDI4SDIzIi8+PC9nPjxjaXJjbGUgY3g9IjMxLjUiIGN5PSIyOCIgcj0iMi42IiBmaWxsPSIjRThCMjNBIi8+PC9zdmc+",
+      "altText": "eusei",
+      "backgroundColor": "transparent"
+    },
+    "description": "API HTTP/JSON read-only sobre os Web Services SOAP do SEI (Sistema Eletrônico de Informações) do governo de Pernambuco. Espelha as consultas do pacote R `rsei`. Roda no servidor boxdev (único com acesso liberado ao SEI) e é publicada via nginx.\n\n**Autenticação:** todas as rotas `/v1/*` exigem o cabeçalho `Authorization: Bearer <token>`.\n\n**Protocolos com barra:** consulte processos/documentos/blocos pela query string (`?protocolo=...`); a barra do número não sobrevive como `%2F` no path através do proxy."
+  },
+  "servers": [
+    { "url": "https://monitoramento.sepe.pe.gov.br/eusei", "description": "Produção (via nginx corporativo)" },
+    { "url": "http://127.0.0.1:18088", "description": "Interno (boxdev)" }
+  ],
+  "security": [{ "bearerAuth": [] }],
+  "tags": [
+    { "name": "saúde" },
+    { "name": "consultas" },
+    { "name": "andamentos" },
+    { "name": "listas" },
+    { "name": "sip" }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["saúde"],
+        "summary": "Liveness (sem autenticação)",
+        "security": [],
+        "responses": { "200": { "description": "serviço no ar", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Health" } } } } }
+      }
+    },
+    "/v1/procedimento": {
+      "get": {
+        "tags": ["consultas"],
+        "summary": "Consulta um processo",
+        "parameters": [
+          { "$ref": "#/components/parameters/Protocolo" },
+          { "name": "sin_retornar_assuntos", "in": "query", "schema": { "$ref": "#/components/schemas/SinFlag" } },
+          { "name": "sin_retornar_interessados", "in": "query", "schema": { "$ref": "#/components/schemas/SinFlag" } },
+          { "name": "sin_retornar_observacoes", "in": "query", "schema": { "$ref": "#/components/schemas/SinFlag" } },
+          { "name": "sin_retornar_andamento_geracao", "in": "query", "schema": { "$ref": "#/components/schemas/SinFlag" } },
+          { "name": "sin_retornar_andamento_conclusao", "in": "query", "schema": { "$ref": "#/components/schemas/SinFlag" } },
+          { "name": "sin_retornar_ultimo_andamento", "in": "query", "schema": { "$ref": "#/components/schemas/SinFlag" } },
+          { "name": "sin_retornar_unidades_procedimento_aberto", "in": "query", "schema": { "$ref": "#/components/schemas/SinFlag" } },
+          { "name": "sin_retornar_procedimentos_relacionados", "in": "query", "schema": { "$ref": "#/components/schemas/SinFlag" } },
+          { "name": "sin_retornar_procedimentos_anexados", "in": "query", "schema": { "$ref": "#/components/schemas/SinFlag" } }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Dados" },
+          "400": { "$ref": "#/components/responses/Erro" },
+          "401": { "$ref": "#/components/responses/Erro" }
+        }
+      }
+    },
+    "/v1/procedimentos": {
+      "get": {
+        "tags": ["consultas"],
+        "summary": "Consulta vários processos (lote)",
+        "parameters": [{ "name": "protocolos", "in": "query", "required": true, "description": "Protocolos separados por vírgula", "schema": { "type": "string" }, "example": "0011108545.000056/2022-49,0030600043.002462/2024-05" }],
+        "responses": { "200": { "$ref": "#/components/responses/Lote" }, "401": { "$ref": "#/components/responses/Erro" } }
+      }
+    },
+    "/v1/procedimento-individual": {
+      "get": {
+        "tags": ["consultas"],
+        "summary": "Processo individual mais recente do usuário",
+        "parameters": [
+          { "name": "id_orgao_procedimento", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "id_tipo_procedimento", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "id_orgao_usuario", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "sigla_usuario", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Dados" }, "400": { "$ref": "#/components/responses/Erro" }, "401": { "$ref": "#/components/responses/Erro" } }
+      }
+    },
+    "/v1/documento": {
+      "get": {
+        "tags": ["consultas"],
+        "summary": "Consulta um documento",
+        "parameters": [
+          { "$ref": "#/components/parameters/Protocolo" },
+          { "name": "sin_retornar_andamento_geracao", "in": "query", "schema": { "$ref": "#/components/schemas/SinFlag" } },
+          { "name": "sin_retornar_assinaturas", "in": "query", "schema": { "$ref": "#/components/schemas/SinFlag" } },
+          { "name": "sin_retornar_publicacao", "in": "query", "schema": { "$ref": "#/components/schemas/SinFlag" } },
+          { "name": "sin_retornar_campos", "in": "query", "schema": { "$ref": "#/components/schemas/SinFlag" } }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Dados" }, "400": { "$ref": "#/components/responses/Erro" }, "401": { "$ref": "#/components/responses/Erro" } }
+      }
+    },
+    "/v1/documentos": {
+      "get": {
+        "tags": ["consultas"],
+        "summary": "Consulta vários documentos (lote)",
+        "parameters": [{ "name": "protocolos", "in": "query", "required": true, "description": "Números de documento separados por vírgula", "schema": { "type": "string" } }],
+        "responses": { "200": { "$ref": "#/components/responses/Lote" }, "401": { "$ref": "#/components/responses/Erro" } }
+      }
+    },
+    "/v1/publicacao": {
+      "get": {
+        "tags": ["consultas"],
+        "summary": "Consulta publicação",
+        "description": "Informe ao menos um de: id_publicacao, id_documento, protocolo_documento.",
+        "parameters": [
+          { "name": "id_publicacao", "in": "query", "schema": { "type": "string" } },
+          { "name": "id_documento", "in": "query", "schema": { "type": "string" } },
+          { "name": "protocolo_documento", "in": "query", "schema": { "type": "string" } },
+          { "name": "sin_retornar_andamento", "in": "query", "schema": { "$ref": "#/components/schemas/SinFlag" } },
+          { "name": "sin_retornar_assinaturas", "in": "query", "schema": { "$ref": "#/components/schemas/SinFlag" } }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Dados" }, "400": { "$ref": "#/components/responses/Erro" }, "401": { "$ref": "#/components/responses/Erro" } }
+      }
+    },
+    "/v1/bloco": {
+      "get": {
+        "tags": ["consultas"],
+        "summary": "Consulta um bloco",
+        "parameters": [
+          { "name": "id", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "sin_retornar_protocolos", "in": "query", "schema": { "$ref": "#/components/schemas/SinFlag" }, "description": "Padrão N" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Dados" }, "400": { "$ref": "#/components/responses/Erro" }, "401": { "$ref": "#/components/responses/Erro" } }
+      }
+    },
+    "/v1/andamentos": {
+      "get": {
+        "tags": ["andamentos"],
+        "summary": "Linha do tempo (andamentos) de um processo",
+        "description": "Sem filtros, usa as tarefas 1..200 (linha do tempo completa) e ordena por data/hora.",
+        "parameters": [
+          { "$ref": "#/components/parameters/Protocolo" },
+          { "name": "tarefas", "in": "query", "description": "IDs de tarefa separados por vírgula", "schema": { "type": "string" } },
+          { "name": "andamentos", "in": "query", "description": "IDs de andamento separados por vírgula", "schema": { "type": "string" } },
+          { "name": "tarefas_modulos", "in": "query", "schema": { "type": "string" } },
+          { "name": "sin_retornar_atributos", "in": "query", "schema": { "$ref": "#/components/schemas/SinFlag" } },
+          { "name": "ordenar", "in": "query", "schema": { "type": "boolean", "default": true } }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Dados" }, "400": { "$ref": "#/components/responses/Erro" }, "401": { "$ref": "#/components/responses/Erro" } }
+      }
+    },
+    "/v1/documentos-processo": {
+      "get": {
+        "tags": ["andamentos"],
+        "summary": "Documentos de um processo (heurística da timeline)",
+        "description": "O SEI não expõe isso nativamente; os números de documento são extraídos das descrições dos andamentos.",
+        "parameters": [{ "$ref": "#/components/parameters/Protocolo" }],
+        "responses": { "200": { "$ref": "#/components/responses/Dados" }, "400": { "$ref": "#/components/responses/Erro" }, "401": { "$ref": "#/components/responses/Erro" } }
+      }
+    },
+    "/v1/publicacoes-processo": {
+      "get": {
+        "tags": ["andamentos"],
+        "summary": "Publicações de um processo (heurística da timeline)",
+        "description": "Descobre os documentos do processo e consulta a publicação de cada um, mantendo só os que possuem publicação. Endpoint pesado: faz uma consulta por documento (paralelizadas) — pode levar dezenas de segundos em processos grandes.",
+        "parameters": [{ "$ref": "#/components/parameters/Protocolo" }],
+        "responses": { "200": { "$ref": "#/components/responses/Dados" }, "400": { "$ref": "#/components/responses/Erro" }, "401": { "$ref": "#/components/responses/Erro" } }
+      }
+    },
+    "/v1/permissao": {
+      "get": {
+        "tags": ["sip"],
+        "summary": "Lista permissões no SIP (Sistema de Permissões)",
+        "description": "Usa o SIP (endpoint/credenciais próprios). Requer SEI_SIP_CHAVE_ACESSO e SEI_SIP_ID_SISTEMA no servidor; sem isso, retorna 400.",
+        "parameters": [
+          { "name": "id_orgao_usuario", "in": "query", "schema": { "type": "string" } },
+          { "name": "id_usuario", "in": "query", "schema": { "type": "string" } },
+          { "name": "id_origem_usuario", "in": "query", "schema": { "type": "string" } },
+          { "name": "id_orgao_unidade", "in": "query", "schema": { "type": "string" } },
+          { "name": "id_unidade", "in": "query", "schema": { "type": "string" } },
+          { "name": "id_origem_unidade", "in": "query", "schema": { "type": "string" } },
+          { "name": "id_perfil", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Dados" }, "400": { "$ref": "#/components/responses/Erro" }, "401": { "$ref": "#/components/responses/Erro" } }
+      }
+    },
+    "/v1/paises": { "get": { "tags": ["listas"], "summary": "Lista países", "responses": { "200": { "$ref": "#/components/responses/Dados" } } } },
+    "/v1/estados": { "get": { "tags": ["listas"], "summary": "Lista estados (UF)", "parameters": [{ "name": "id_pais", "in": "query", "schema": { "type": "string" } }], "responses": { "200": { "$ref": "#/components/responses/Dados" } } } },
+    "/v1/cidades": { "get": { "tags": ["listas"], "summary": "Lista cidades", "parameters": [{ "name": "id_pais", "in": "query", "schema": { "type": "string" } }, { "name": "id_estado", "in": "query", "schema": { "type": "string" } }], "responses": { "200": { "$ref": "#/components/responses/Dados" } } } },
+    "/v1/unidades": { "get": { "tags": ["listas"], "summary": "Lista unidades", "parameters": [{ "name": "id_tipo_procedimento", "in": "query", "schema": { "type": "string" } }, { "name": "id_serie", "in": "query", "schema": { "type": "string" } }], "responses": { "200": { "$ref": "#/components/responses/Dados" } } } },
+    "/v1/series": { "get": { "tags": ["listas"], "summary": "Lista séries (tipos de documento)", "parameters": [{ "name": "id_unidade", "in": "query", "schema": { "type": "string" } }, { "name": "id_tipo_procedimento", "in": "query", "schema": { "type": "string" } }], "responses": { "200": { "$ref": "#/components/responses/Dados" } } } },
+    "/v1/tipos-procedimento": { "get": { "tags": ["listas"], "summary": "Lista tipos de processo", "parameters": [{ "name": "id_unidade", "in": "query", "schema": { "type": "string" } }, { "name": "id_serie", "in": "query", "schema": { "type": "string" } }], "responses": { "200": { "$ref": "#/components/responses/Dados" } } } },
+    "/v1/tipos-procedimento-ouvidoria": { "get": { "tags": ["listas"], "summary": "Lista tipos de processo de ouvidoria", "responses": { "200": { "$ref": "#/components/responses/Dados" } } } },
+    "/v1/tipos-conferencia": { "get": { "tags": ["listas"], "summary": "Lista tipos de conferência", "parameters": [{ "name": "id_unidade", "in": "query", "schema": { "type": "string" } }], "responses": { "200": { "$ref": "#/components/responses/Dados" } } } },
+    "/v1/cargos": { "get": { "tags": ["listas"], "summary": "Lista cargos", "parameters": [{ "name": "id_cargo", "in": "query", "schema": { "type": "string" } }], "responses": { "200": { "$ref": "#/components/responses/Dados" } } } },
+    "/v1/hipoteses-legais": { "get": { "tags": ["listas"], "summary": "Lista hipóteses legais", "parameters": [{ "name": "nivel_acesso", "in": "query", "schema": { "type": "string", "enum": ["1", "2"] } }], "responses": { "200": { "$ref": "#/components/responses/Dados" } } } },
+    "/v1/extensoes-permitidas": { "get": { "tags": ["listas"], "summary": "Lista extensões permitidas", "parameters": [{ "name": "id_arquivo_extensao", "in": "query", "schema": { "type": "string" } }], "responses": { "200": { "$ref": "#/components/responses/Dados" } } } },
+    "/v1/marcadores-unidade": { "get": { "tags": ["listas"], "summary": "Lista marcadores da unidade", "responses": { "200": { "$ref": "#/components/responses/Dados" } } } },
+    "/v1/usuarios": { "get": { "tags": ["listas"], "summary": "Lista usuários da unidade", "parameters": [{ "name": "id_usuario", "in": "query", "schema": { "type": "string" } }], "responses": { "200": { "$ref": "#/components/responses/Dados" } } } },
+    "/v1/feriados": { "get": { "tags": ["listas"], "summary": "Lista feriados", "parameters": [{ "name": "id_orgao", "in": "query", "schema": { "type": "string" } }, { "name": "data_inicial", "in": "query", "schema": { "type": "string" } }, { "name": "data_final", "in": "query", "schema": { "type": "string" } }], "responses": { "200": { "$ref": "#/components/responses/Dados" } } } },
+    "/v1/contatos": { "get": { "tags": ["listas"], "summary": "Lista contatos (paginado)", "parameters": [{ "name": "id_tipo_contato", "in": "query", "schema": { "type": "string" } }, { "name": "pagina_registros", "in": "query", "schema": { "type": "string" } }, { "name": "pagina_atual", "in": "query", "schema": { "type": "string" } }, { "name": "sigla", "in": "query", "schema": { "type": "string" } }, { "name": "nome", "in": "query", "schema": { "type": "string" } }, { "name": "cpf", "in": "query", "schema": { "type": "string" } }, { "name": "cnpj", "in": "query", "schema": { "type": "string" } }, { "name": "matricula", "in": "query", "schema": { "type": "string" } }], "responses": { "200": { "$ref": "#/components/responses/Dados" } } } }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer" }
+    },
+    "parameters": {
+      "Protocolo": { "name": "protocolo", "in": "query", "required": true, "description": "Número do processo/documento visível ao usuário", "schema": { "type": "string" }, "example": "0011108545.000056/2022-49" }
+    },
+    "schemas": {
+      "SinFlag": { "type": "string", "enum": ["S", "N"], "default": "S" },
+      "Health": { "type": "object", "properties": { "ok": { "type": "boolean" }, "service": { "type": "string" }, "version": { "type": "string" } } },
+      "Dados": { "type": "object", "properties": { "ok": { "type": "boolean", "example": true }, "dados": { "description": "Objeto ou array com os dados do SEI (nomes originais do SEI; xsi:nil vira null)." } } },
+      "Lote": { "type": "object", "properties": { "ok": { "type": "boolean" }, "itens": { "type": "array", "items": { "type": "object", "properties": { "protocolo": { "type": "string" }, "dados": {}, "erro": { "type": "string", "nullable": true } } } } } },
+      "Erro": { "type": "object", "properties": { "ok": { "type": "boolean", "example": false }, "erro": { "type": "string" }, "detalhe": { "type": "string", "nullable": true } } }
+    },
+    "responses": {
+      "Dados": { "description": "Sucesso", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Dados" } } } },
+      "Lote": { "description": "Resultado em lote", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Lote" } } } },
+      "Erro": { "description": "Erro", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Erro" } } } }
+    }
+  }
+}

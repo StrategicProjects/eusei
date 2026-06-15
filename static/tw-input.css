@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+/* escaneia a landing e a documentação para tree-shaking das utilidades usadas */
+@source "./index.html";
+@source "./docs.html";
+
+/* tema editorial do eusei: papel quente + verde-pinheiro */
+@theme {
+  --font-sans: "Spline Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --color-paper: #faf7f0;
+  --color-paper-2: #f4efe3;
+  --color-paper-3: #ece5d6;
+  --color-ink: #1b1e1c;
+  --color-muted: #5f655f;
+  --color-pine: #0e6e5c;
+  --color-pine-deep: #0b5848;
+  --color-pine-ink: #12201c;
+  --color-gold: #e8b23a;
+}

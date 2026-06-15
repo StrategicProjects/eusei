@@ -1,0 +1,26 @@
+[Unit]
+Description=eusei - API JSON dos Web Services do SEI
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=eusei
+Group=eusei
+EnvironmentFile=/etc/eusei.env
+ExecStart=/opt/eusei/eusei
+Restart=on-failure
+RestartSec=3
+
+# Hardening (o serviço só precisa ler o binário e fazer rede de saída)
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6
+ReadOnlyPaths=/opt/eusei
+
+[Install]
+WantedBy=multi-user.target

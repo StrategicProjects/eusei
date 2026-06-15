@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>eusei — Documentação da API</title>
+  <meta name="description" content="Documentação da API eusei: consultas read-only do SEI em JSON."/>
+  <link rel="stylesheet" href="tailwind.css"/>
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NCIgaGVpZ2h0PSI0NCIgdmlld0JveD0iMCAwIDQ0IDQ0Ij48cmVjdCB3aWR0aD0iNDQiIGhlaWdodD0iNDQiIHJ4PSIxMSIgZmlsbD0iIzBFNkU1QyIvPjxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0Y0RUZFMyIgc3Ryb2tlLXdpZHRoPSIyLjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PHBhdGggZD0iTTEzIDE2SDMxIi8+PHBhdGggZD0iTTEzIDIySDI3Ii8+PHBhdGggZD0iTTEzIDI4SDIzIi8+PC9nPjxjaXJjbGUgY3g9IjMxLjUiIGN5PSIyOCIgcj0iMi42IiBmaWxsPSIjRThCMjNBIi8+PC9zdmc+"/>
+  <style>
+    @font-face { font-family:'Fraunces'; src:url('fraunces.woff2') format('woff2'); font-weight:300 700; font-display:swap; }
+    @font-face { font-family:'Spline Sans'; src:url('splinesans.woff2') format('woff2'); font-weight:300 700; font-display:swap; }
+    html{scroll-behavior:smooth}
+    body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+      background:radial-gradient(120% 70% at 50% -10%, rgba(14,110,92,.08), transparent 55%);}
+    ::selection{background:rgba(14,110,92,.18)}
+    ::-webkit-scrollbar{width:11px;height:11px}
+    ::-webkit-scrollbar-thumb{background:#d0cabb;border-radius:9px;border:3px solid #faf7f0}
+    details>summary{list-style:none}
+    details>summary::-webkit-details-marker{display:none}
+    details>summary::after{content:"▸";margin-left:.5rem;color:#0e6e5c;transition:transform .2s}
+    details[open]>summary::after{transform:rotate(90deg);display:inline-block}
+    .nav-link.active{color:#0e6e5c;font-weight:600}
+  </style>
+</head>
+<body class="min-h-screen bg-paper text-ink font-sans antialiased">
+  <div class="relative z-10">
+
+    <!-- topo -->
+    <header class="sticky top-0 z-30 backdrop-blur bg-paper/80 border-b border-ink/8">
+      <div class="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
+        <a href="./" class="flex items-center gap-3">
+          <span class="grid place-items-center w-9 h-9 rounded-xl bg-gradient-to-br from-pine to-pine-deep shadow-md shadow-pine/30">
+            <svg viewBox="0 0 44 44" class="w-5 h-5" fill="none" aria-hidden="true">
+              <g stroke="#F4EFE3" stroke-width="2.6" stroke-linecap="round"><path d="M13 16H31"/><path d="M13 22H27"/><path d="M13 28H23"/></g>
+              <circle cx="31.5" cy="28" r="2.8" fill="#E8B23A"/>
+            </svg>
+          </span>
+          <span class="font-display text-xl font-semibold tracking-tight">eusei</span>
+          <span class="hidden sm:inline text-muted text-sm border-l border-ink/15 pl-3 ml-1">Documentação</span>
+        </a>
+        <nav class="flex items-center gap-1 text-sm">
+          <a href="./" class="px-3 py-2 rounded-lg text-muted hover:text-ink hover:bg-paper-2 transition">Início</a>
+          <a href="openapi.json" class="px-3 py-2 rounded-lg text-muted hover:text-ink hover:bg-paper-2 transition">openapi.json</a>
+          <a href="health" class="px-3 py-2 rounded-lg text-muted hover:text-ink hover:bg-paper-2 transition">Status</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="mx-auto max-w-7xl px-6 grid lg:grid-cols-[210px_1fr] gap-10">
+
+      <!-- navegação lateral -->
+      <aside class="hidden lg:block">
+        <nav class="sticky top-24 py-10 text-sm space-y-1">
+          <a href="#visao-geral" class="nav-link block px-3 py-1.5 rounded-lg text-muted hover:text-ink hover:bg-paper-2 transition">Visão geral</a>
+          <a href="#autenticacao" class="nav-link block px-3 py-1.5 rounded-lg text-muted hover:text-ink hover:bg-paper-2 transition">Autenticação</a>
+          <a href="#convencoes" class="nav-link block px-3 py-1.5 rounded-lg text-muted hover:text-ink hover:bg-paper-2 transition">Convenções</a>
+          <a href="#resposta" class="nav-link block px-3 py-1.5 rounded-lg text-muted hover:text-ink hover:bg-paper-2 transition">Anatomia da resposta</a>
+          <div class="pt-3 pb-1 px-3 text-xs uppercase tracking-wider text-muted/60">Endpoints</div>
+          <a href="#consultas" class="nav-link block px-3 py-1.5 rounded-lg text-muted hover:text-ink hover:bg-paper-2 transition">Consultas</a>
+          <a href="#processo" class="nav-link block px-3 py-1.5 rounded-lg text-muted hover:text-ink hover:bg-paper-2 transition">Andamentos & processo</a>
+          <a href="#listas" class="nav-link block px-3 py-1.5 rounded-lg text-muted hover:text-ink hover:bg-paper-2 transition">Listas</a>
+          <a href="#sip" class="nav-link block px-3 py-1.5 rounded-lg text-muted hover:text-ink hover:bg-paper-2 transition">SIP</a>
+          <a href="#erros" class="nav-link block px-3 py-1.5 rounded-lg text-muted hover:text-ink hover:bg-paper-2 transition">Erros</a>
+        </nav>
+      </aside>
+
+      <!-- conteúdo -->
+      <main class="py-10 min-w-0 space-y-16">
+
+        <!-- visão geral -->
+        <section id="visao-geral" class="scroll-mt-24">
+          <span class="inline-flex items-center gap-2 text-xs font-medium tracking-wide uppercase text-pine bg-pine/10 px-3 py-1.5 rounded-full">
+            <span class="w-1.5 h-1.5 rounded-full bg-pine"></span> read-only · v0.1
+          </span>
+          <h1 class="font-display text-4xl sm:text-5xl font-semibold tracking-tight mt-5">Documentação</h1>
+          <p class="text-lg text-muted leading-relaxed mt-4 max-w-2xl">
+            A <strong class="text-ink font-semibold">eusei</strong> traduz os Web Services SOAP do
+            <abbr title="Sistema Eletrônico de Informações" class="no-underline border-b border-dotted border-muted/40">SEI</abbr>
+            em JSON limpo. Toda chamada é um <code class="font-mono text-sm text-pine-deep bg-pine/8 px-1.5 py-0.5 rounded">GET</code> autenticado por Bearer token.
+          </p>
+          <div class="mt-5 inline-flex items-center gap-2 rounded-xl border border-ink/10 bg-white/60 px-4 py-2.5 font-mono text-sm">
+            <span class="text-muted">base</span>
+            <span class="text-ink">https://monitoramento.sepe.pe.gov.br/eusei</span>
+          </div>
+
+          <!-- diagrama: fluxo de requisição -->
+          <div class="mt-8 rounded-2xl border border-ink/8 bg-white/50 p-6 overflow-x-auto">
+            <div class="text-sm font-medium text-muted mb-4">Fluxo de uma requisição</div>
+            <svg viewBox="0 0 900 172" class="w-full min-w-[780px]" role="img" aria-label="Fluxo: cliente, nginx, eusei, SEI e retorno em JSON">
+              <defs>
+                <marker id="fwd" markerWidth="7" markerHeight="7" refX="5.2" refY="3" orient="auto"><path d="M0 0L6 3L0 6Z" fill="#0e6e5c"/></marker>
+                <marker id="ret" markerWidth="7" markerHeight="7" refX="5.2" refY="3" orient="auto"><path d="M0 0L6 3L0 6Z" fill="#b8902a"/></marker>
+                <linearGradient id="eg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0e7c66"/><stop offset="1" stop-color="#0b5848"/></linearGradient>
+              </defs>
+              <g font-family="Spline Sans, sans-serif">
+                <!-- nós -->
+                <g>
+                  <rect x="12" y="34" width="156" height="56" rx="14" fill="#ffffff" stroke="#1b1e1c" stroke-opacity=".12"/>
+                  <text x="90" y="60" text-anchor="middle" font-size="15" font-weight="600" fill="#1b1e1c">Cliente</text>
+                  <text x="90" y="78" text-anchor="middle" font-size="11" fill="#5f655f">seu app / script</text>
+                </g>
+                <g>
+                  <rect x="256" y="34" width="156" height="56" rx="14" fill="#ffffff" stroke="#1b1e1c" stroke-opacity=".12"/>
+                  <text x="334" y="60" text-anchor="middle" font-size="15" font-weight="600" fill="#1b1e1c">nginx</text>
+                  <text x="334" y="78" text-anchor="middle" font-size="11" fill="#5f655f">TLS · /eusei</text>
+                </g>
+                <g>
+                  <rect x="500" y="34" width="156" height="56" rx="14" fill="url(#eg)"/>
+                  <text x="578" y="60" text-anchor="middle" font-size="15" font-weight="700" fill="#f7f4ec">eusei</text>
+                  <text x="578" y="78" text-anchor="middle" font-size="11" fill="#cfe6df">Rust · :18088</text>
+                </g>
+                <g>
+                  <rect x="744" y="34" width="144" height="56" rx="14" fill="#12201c"/>
+                  <text x="816" y="60" text-anchor="middle" font-size="15" font-weight="600" fill="#f7f4ec">SEI</text>
+                  <text x="816" y="78" text-anchor="middle" font-size="11" fill="#9db8ae">SOAP / XML</text>
+                </g>
+                <!-- ida (verde) -->
+                <g stroke="#0e6e5c" stroke-width="1.75" fill="none">
+                  <line x1="168" y1="62" x2="250" y2="62" marker-end="url(#fwd)"/>
+                  <line x1="412" y1="62" x2="494" y2="62" marker-end="url(#fwd)"/>
+                  <line x1="656" y1="62" x2="738" y2="62" marker-end="url(#fwd)"/>
+                </g>
+                <text x="209" y="53" text-anchor="middle" font-size="10.5" fill="#5f655f">Bearer</text>
+                <text x="697" y="53" text-anchor="middle" font-size="10.5" fill="#5f655f">consulta</text>
+                <!-- volta (dourado): SEI → Cliente roteada por baixo, uma seta só -->
+                <path d="M816 90 V132 H90 V92" fill="none" stroke="#b8902a" stroke-width="1.75" stroke-linejoin="round" marker-end="url(#ret)"/>
+                <rect x="430" y="122" width="56" height="20" rx="10" fill="#faf7f0"/>
+                <text x="458" y="136" text-anchor="middle" font-size="11" font-weight="600" fill="#b8902a">JSON</text>
+              </g>
+            </svg>
+          </div>
+        </section>
+
+        <!-- autenticação -->
+        <section id="autenticacao" class="scroll-mt-24">
+          <h2 class="font-display text-3xl font-semibold tracking-tight">Autenticação</h2>
+          <p class="text-muted leading-relaxed mt-3 max-w-2xl">Todas as rotas <code class="font-mono text-sm text-pine-deep">/v1/*</code> exigem um token no cabeçalho. As rotas públicas (esta página, <code class="font-mono text-sm text-pine-deep">/health</code>, <code class="font-mono text-sm text-pine-deep">/openapi.json</code>) não.</p>
+          <pre class="mt-4 rounded-xl bg-pine-ink text-paper p-4 text-sm font-mono overflow-x-auto">Authorization: Bearer &lt;seu-token&gt;</pre>
+        </section>
+
+        <!-- convenções -->
+        <section id="convencoes" class="scroll-mt-24">
+          <h2 class="font-display text-3xl font-semibold tracking-tight">Convenções</h2>
+          <div class="grid md:grid-cols-3 gap-4 mt-6">
+            <div class="rounded-2xl border border-ink/8 bg-white/50 p-5">
+              <div class="font-display text-pine text-lg font-semibold">Protocolo na query</div>
+              <p class="text-muted text-sm mt-2 leading-relaxed">A barra do número (<code class="font-mono text-pine-deep">/</code>) não sobrevive no path através do proxy. Sempre use <code class="font-mono text-pine-deep">?protocolo=</code>.</p>
+            </div>
+            <div class="rounded-2xl border border-ink/8 bg-white/50 p-5">
+              <div class="font-display text-pine text-lg font-semibold">Sinalizadores</div>
+              <p class="text-muted text-sm mt-2 leading-relaxed">Filtros <code class="font-mono text-pine-deep">sin_retornar_*</code> aceitam <code class="font-mono text-pine-deep">S</code>/<code class="font-mono text-pine-deep">N</code> (padrão <code class="font-mono text-pine-deep">S</code>) para incluir/omitir blocos.</p>
+            </div>
+            <div class="rounded-2xl border border-ink/8 bg-white/50 p-5">
+              <div class="font-display text-pine text-lg font-semibold">Nomes originais</div>
+              <p class="text-muted text-sm mt-2 leading-relaxed">O JSON preserva os nomes do SEI (ex.: <code class="font-mono text-pine-deep">ProcedimentoFormatado</code>); <code class="font-mono text-pine-deep">xsi:nil</code> vira <code class="font-mono text-pine-deep">null</code>.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- anatomia da resposta -->
+        <section id="resposta" class="scroll-mt-24">
+          <h2 class="font-display text-3xl font-semibold tracking-tight">Anatomia da resposta</h2>
+          <p class="text-muted leading-relaxed mt-3 max-w-2xl">Sucesso devolve <code class="font-mono text-sm text-pine-deep">{ ok, dados }</code>. Abaixo, o formato de um processo (<code class="font-mono text-sm text-pine-deep">/v1/procedimento</code>):</p>
+          <div class="grid lg:grid-cols-2 gap-5 mt-6">
+            <pre class="rounded-2xl bg-pine-ink text-paper p-5 text-[12.5px] leading-relaxed font-mono overflow-x-auto">{
+  <span class="text-paper/50">"ok"</span>: <span class="text-gold">true</span>,
+  <span class="text-paper/50">"dados"</span>: {
+    <span class="text-emerald-300">"IdProcedimento"</span>: <span class="text-paper/80">"30272383"</span>,
+    <span class="text-emerald-300">"ProcedimentoFormatado"</span>: <span class="text-paper/80">"0011…/2022-49"</span>,
+    <span class="text-emerald-300">"Especificacao"</span>: <span class="text-paper/80">"TOMADA DE PREÇOS…"</span>,
+    <span class="text-emerald-300">"TipoProcedimento"</span>: { <span class="text-paper/50">"Nome"</span>: … },
+    <span class="text-emerald-300">"AndamentoGeracao"</span>: { … },
+    <span class="text-emerald-300">"UltimoAndamento"</span>: { … },
+    <span class="text-emerald-300">"Assuntos"</span>: [ … ],
+    <span class="text-emerald-300">"Interessados"</span>: [ … ]
+  }
+}</pre>
+            <div class="rounded-2xl border border-ink/8 bg-white/50 p-5 overflow-x-auto">
+              <svg viewBox="0 0 384 296" class="w-full min-w-[320px]" role="img" aria-label="Estrutura da resposta de um processo">
+                <g font-family="Spline Sans, sans-serif">
+                  <rect x="14" y="14" width="152" height="42" rx="12" fill="#0e6e5c"/>
+                  <text x="90" y="40" text-anchor="middle" font-size="13" font-weight="700" fill="#f7f4ec">Procedimento</text>
+                  <!-- tronco + galhos -->
+                  <g stroke="#0e6e5c" stroke-opacity=".28" stroke-width="1.5" fill="none">
+                    <path d="M44 56 V246"/>
+                    <path d="M44 76 H196"/>
+                    <path d="M44 110 H196"/>
+                    <path d="M44 144 H196"/>
+                    <path d="M44 178 H196"/>
+                    <path d="M44 212 H196"/>
+                    <path d="M44 246 H196"/>
+                  </g>
+                  <g font-family="ui-monospace, monospace" font-size="11">
+                    <g><rect x="196" y="63" width="172" height="26" rx="8" fill="#fff" stroke="#1b1e1c" stroke-opacity=".12"/><text x="209" y="80" fill="#1b1e1c">Especificacao</text></g>
+                    <g><rect x="196" y="97" width="172" height="26" rx="8" fill="#fff" stroke="#0e6e5c" stroke-opacity=".3"/><text x="209" y="114" fill="#0b5848">TipoProcedimento {}</text></g>
+                    <g><rect x="196" y="131" width="172" height="26" rx="8" fill="#fff" stroke="#0e6e5c" stroke-opacity=".3"/><text x="209" y="148" fill="#0b5848">AndamentoGeracao {}</text></g>
+                    <g><rect x="196" y="165" width="172" height="26" rx="8" fill="#fff" stroke="#0e6e5c" stroke-opacity=".3"/><text x="209" y="182" fill="#0b5848">UltimoAndamento {}</text></g>
+                    <g><rect x="196" y="199" width="172" height="26" rx="8" fill="#fff" stroke="#b8902a" stroke-opacity=".5"/><text x="209" y="216" fill="#8a6a12">Assuntos [ ]</text></g>
+                    <g><rect x="196" y="233" width="172" height="26" rx="8" fill="#fff" stroke="#b8902a" stroke-opacity=".5"/><text x="209" y="250" fill="#8a6a12">Interessados [ ]</text></g>
+                  </g>
+                  <!-- legenda -->
+                  <g font-family="Spline Sans, sans-serif" font-size="10.5">
+                    <rect x="16" y="270" width="11" height="11" rx="3" fill="#0b5848" fill-opacity=".2" stroke="#0b5848" stroke-opacity=".45"/>
+                    <text x="33" y="279" fill="#5f655f">objeto { }</text>
+                    <rect x="112" y="270" width="11" height="11" rx="3" fill="#b8902a" fill-opacity=".2" stroke="#b8902a" stroke-opacity=".55"/>
+                    <text x="129" y="279" fill="#5f655f">array [ ]</text>
+                  </g>
+                </g>
+              </svg>
+            </div>
+          </div>
+        </section>
+
+        <!-- CONSULTAS -->
+        <section id="consultas" class="scroll-mt-24">
+          <div class="flex items-center gap-3">
+            <h2 class="font-display text-3xl font-semibold tracking-tight">Consultas</h2>
+            <span class="text-xs text-muted bg-paper-2 px-2.5 py-1 rounded-full">processos · documentos · publicações · blocos</span>
+          </div>
+          <div class="grid gap-4 mt-6">
+
+            <article class="scroll-mt-24 rounded-2xl border border-ink/8 bg-white/55 p-6 hover:border-pine/25 transition">
+              <div class="flex items-center gap-3 flex-wrap">
+                <span class="text-[11px] font-bold tracking-wider px-2 py-1 rounded-md bg-pine/10 text-pine">GET</span>
+                <code class="font-mono text-[15px]">/v1/procedimento</code>
+              </div>
+              <p class="text-muted mt-3">Consulta um processo pelo protocolo. Aceita os filtros <code class="font-mono text-sm text-pine-deep">sin_retornar_*</code> (assuntos, interessados, observacoes, andamento_geracao, andamento_conclusao, ultimo_andamento, unidades_procedimento_aberto, procedimentos_relacionados, procedimentos_anexados).</p>
+              <div class="mt-4 flex flex-wrap gap-2 text-xs">
+                <span class="font-mono px-2 py-1 rounded bg-pine/8 text-pine-deep">protocolo<span class="text-gold ml-1">obrigatório</span></span>
+              </div>
+              <details class="mt-4"><summary class="cursor-pointer text-sm text-pine font-medium inline-flex items-center">Exemplo</summary>
+                <pre class="mt-3 rounded-xl bg-pine-ink text-paper p-4 text-[12.5px] font-mono overflow-x-auto">curl -H 'Authorization: Bearer TOKEN' \
+  '…/eusei/v1/procedimento?protocolo=0011108545.000056/2022-49'</pre>
+              </details>
+            </article>
+
+            <article class="rounded-2xl border border-ink/8 bg-white/55 p-6 hover:border-pine/25 transition">
+              <div class="flex items-center gap-3 flex-wrap"><span class="text-[11px] font-bold tracking-wider px-2 py-1 rounded-md bg-pine/10 text-pine">GET</span><code class="font-mono text-[15px]">/v1/procedimentos</code></div>
+              <p class="text-muted mt-3">Lote de processos. Cada item retorna <code class="font-mono text-sm text-pine-deep">{ protocolo, dados, erro }</code>.</p>
+              <div class="mt-4 flex flex-wrap gap-2 text-xs"><span class="font-mono px-2 py-1 rounded bg-pine/8 text-pine-deep">protocolos<span class="text-gold ml-1">obrigatório</span></span><span class="text-muted self-center">separados por vírgula</span></div>
+            </article>
+
+            <article class="rounded-2xl border border-ink/8 bg-white/55 p-6 hover:border-pine/25 transition">
+              <div class="flex items-center gap-3 flex-wrap"><span class="text-[11px] font-bold tracking-wider px-2 py-1 rounded-md bg-pine/10 text-pine">GET</span><code class="font-mono text-[15px]">/v1/documento</code> <span class="text-muted text-sm">·</span> <code class="font-mono text-[15px]">/v1/documentos</code></div>
+              <p class="text-muted mt-3">Consulta um documento (ou um lote, por <code class="font-mono text-sm text-pine-deep">?protocolos=</code>). Filtros <code class="font-mono text-sm text-pine-deep">sin_retornar_*</code>: andamento_geracao, assinaturas, publicacao, campos.</p>
+              <div class="mt-4 flex flex-wrap gap-2 text-xs"><span class="font-mono px-2 py-1 rounded bg-pine/8 text-pine-deep">protocolo<span class="text-gold ml-1">obrigatório</span></span></div>
+            </article>
+
+            <article class="rounded-2xl border border-ink/8 bg-white/55 p-6 hover:border-pine/25 transition">
+              <div class="flex items-center gap-3 flex-wrap"><span class="text-[11px] font-bold tracking-wider px-2 py-1 rounded-md bg-pine/10 text-pine">GET</span><code class="font-mono text-[15px]">/v1/publicacao</code></div>
+              <p class="text-muted mt-3">Consulta uma publicação. Informe ao menos um: <code class="font-mono text-sm text-pine-deep">id_publicacao</code>, <code class="font-mono text-sm text-pine-deep">id_documento</code> ou <code class="font-mono text-sm text-pine-deep">protocolo_documento</code>.</p>
+            </article>
+
+            <article class="rounded-2xl border border-ink/8 bg-white/55 p-6 hover:border-pine/25 transition">
+              <div class="flex items-center gap-3 flex-wrap"><span class="text-[11px] font-bold tracking-wider px-2 py-1 rounded-md bg-pine/10 text-pine">GET</span><code class="font-mono text-[15px]">/v1/bloco</code> <span class="text-muted text-sm">·</span> <code class="font-mono text-[15px]">/v1/procedimento-individual</code></div>
+              <p class="text-muted mt-3"><code class="font-mono text-sm text-pine-deep">/bloco?id=</code> consulta um bloco. <code class="font-mono text-sm text-pine-deep">/procedimento-individual</code> exige id_orgao_procedimento, id_tipo_procedimento, id_orgao_usuario e sigla_usuario.</p>
+            </article>
+          </div>
+        </section>
+
+        <!-- PROCESSO -->
+        <section id="processo" class="scroll-mt-24">
+          <div class="flex items-center gap-3">
+            <h2 class="font-display text-3xl font-semibold tracking-tight">Andamentos & processo</h2>
+          </div>
+          <div class="grid gap-4 mt-6">
+            <article class="rounded-2xl border border-ink/8 bg-white/55 p-6 hover:border-pine/25 transition">
+              <div class="flex items-center gap-3 flex-wrap"><span class="text-[11px] font-bold tracking-wider px-2 py-1 rounded-md bg-pine/10 text-pine">GET</span><code class="font-mono text-[15px]">/v1/andamentos</code></div>
+              <p class="text-muted mt-3">Linha do tempo do processo, ordenada por data/hora. Sem filtros, usa as tarefas 1–200 (timeline completa). Filtros: <code class="font-mono text-sm text-pine-deep">tarefas</code>, <code class="font-mono text-sm text-pine-deep">andamentos</code>, <code class="font-mono text-sm text-pine-deep">tarefas_modulos</code> (listas), <code class="font-mono text-sm text-pine-deep">sin_retornar_atributos</code>, <code class="font-mono text-sm text-pine-deep">ordenar</code>.</p>
+              <div class="mt-4 flex flex-wrap gap-2 text-xs"><span class="font-mono px-2 py-1 rounded bg-pine/8 text-pine-deep">protocolo<span class="text-gold ml-1">obrigatório</span></span></div>
+            </article>
+            <article class="rounded-2xl border border-ink/8 bg-white/55 p-6 hover:border-pine/25 transition">
+              <div class="flex items-center gap-3 flex-wrap"><span class="text-[11px] font-bold tracking-wider px-2 py-1 rounded-md bg-pine/10 text-pine">GET</span><code class="font-mono text-[15px]">/v1/documentos-processo</code> <span class="text-muted text-sm">·</span> <code class="font-mono text-[15px]">/v1/publicacoes-processo</code></div>
+              <p class="text-muted mt-3">Documentos do processo (extraídos da timeline) e suas publicações. O SEI não expõe isso nativamente — são heurísticas. <span class="text-ink/70">publicacoes-processo</span> faz uma consulta por documento (paralelizadas) e pode levar alguns segundos.</p>
+              <div class="mt-4 flex flex-wrap gap-2 text-xs"><span class="font-mono px-2 py-1 rounded bg-pine/8 text-pine-deep">protocolo<span class="text-gold ml-1">obrigatório</span></span></div>
+            </article>
+          </div>
+        </section>
+
+        <!-- LISTAS -->
+        <section id="listas" class="scroll-mt-24">
+          <h2 class="font-display text-3xl font-semibold tracking-tight">Listas</h2>
+          <p class="text-muted mt-3 max-w-2xl">Tabelas auxiliares do SEI. Todas <code class="font-mono text-sm text-pine-deep">GET /v1/…</code> com filtros opcionais por query.</p>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-6 font-mono text-sm">
+            <div class="rounded-xl border border-ink/8 bg-white/50 px-4 py-3"><span class="text-pine">GET</span> /v1/unidades</div>
+            <div class="rounded-xl border border-ink/8 bg-white/50 px-4 py-3"><span class="text-pine">GET</span> /v1/series</div>
+            <div class="rounded-xl border border-ink/8 bg-white/50 px-4 py-3"><span class="text-pine">GET</span> /v1/tipos-procedimento</div>
+            <div class="rounded-xl border border-ink/8 bg-white/50 px-4 py-3"><span class="text-pine">GET</span> /v1/tipos-procedimento-ouvidoria</div>
+            <div class="rounded-xl border border-ink/8 bg-white/50 px-4 py-3"><span class="text-pine">GET</span> /v1/tipos-conferencia</div>
+            <div class="rounded-xl border border-ink/8 bg-white/50 px-4 py-3"><span class="text-pine">GET</span> /v1/paises</div>
+            <div class="rounded-xl border border-ink/8 bg-white/50 px-4 py-3"><span class="text-pine">GET</span> /v1/estados</div>
+            <div class="rounded-xl border border-ink/8 bg-white/50 px-4 py-3"><span class="text-pine">GET</span> /v1/cidades</div>
+            <div class="rounded-xl border border-ink/8 bg-white/50 px-4 py-3"><span class="text-pine">GET</span> /v1/cargos</div>
+            <div class="rounded-xl border border-ink/8 bg-white/50 px-4 py-3"><span class="text-pine">GET</span> /v1/hipoteses-legais</div>
+            <div class="rounded-xl border border-ink/8 bg-white/50 px-4 py-3"><span class="text-pine">GET</span> /v1/extensoes-permitidas</div>
+            <div class="rounded-xl border border-ink/8 bg-white/50 px-4 py-3"><span class="text-pine">GET</span> /v1/marcadores-unidade</div>
+            <div class="rounded-xl border border-ink/8 bg-white/50 px-4 py-3"><span class="text-pine">GET</span> /v1/usuarios</div>
+            <div class="rounded-xl border border-ink/8 bg-white/50 px-4 py-3"><span class="text-pine">GET</span> /v1/feriados</div>
+            <div class="rounded-xl border border-ink/8 bg-white/50 px-4 py-3"><span class="text-pine">GET</span> /v1/contatos</div>
+          </div>
+        </section>
+
+        <!-- SIP -->
+        <section id="sip" class="scroll-mt-24">
+          <h2 class="font-display text-3xl font-semibold tracking-tight">SIP · Permissões</h2>
+          <article class="rounded-2xl border border-ink/8 bg-white/55 p-6 mt-6">
+            <div class="flex items-center gap-3 flex-wrap"><span class="text-[11px] font-bold tracking-wider px-2 py-1 rounded-md bg-pine/10 text-pine">GET</span><code class="font-mono text-[15px]">/v1/permissao</code></div>
+            <p class="text-muted mt-3">Lista permissões no Sistema de Permissões (SIP). Usa endpoint e credenciais próprios — requer <code class="font-mono text-sm text-pine-deep">SEI_SIP_CHAVE_ACESSO</code> e <code class="font-mono text-sm text-pine-deep">SEI_SIP_ID_SISTEMA</code> no servidor; sem isso, responde <code class="font-mono text-sm text-pine-deep">400</code> com mensagem clara.</p>
+          </article>
+        </section>
+
+        <!-- ERROS -->
+        <section id="erros" class="scroll-mt-24">
+          <h2 class="font-display text-3xl font-semibold tracking-tight">Erros</h2>
+          <p class="text-muted mt-3 max-w-2xl">Falhas vêm como <code class="font-mono text-sm text-pine-deep">{ ok:false, codigo, erro, detalhe }</code> com status HTTP coerente. O <code class="font-mono text-sm text-pine-deep">codigo</code> é estável para o cliente tratar.</p>
+          <div class="mt-6 overflow-x-auto rounded-2xl border border-ink/8 bg-white/50">
+            <table class="w-full text-sm">
+              <thead class="text-left text-muted border-b border-ink/8">
+                <tr><th class="font-medium px-5 py-3">codigo</th><th class="font-medium px-5 py-3">HTTP</th><th class="font-medium px-5 py-3">quando</th></tr>
+              </thead>
+              <tbody class="font-mono">
+                <tr class="border-b border-ink/5"><td class="px-5 py-3 text-pine-deep">nao_autorizado</td><td class="px-5 py-3">401</td><td class="px-5 py-3 font-sans text-muted">token ausente/inválido</td></tr>
+                <tr class="border-b border-ink/5"><td class="px-5 py-3 text-pine-deep">parametro_invalido</td><td class="px-5 py-3">400</td><td class="px-5 py-3 font-sans text-muted">falta parâmetro obrigatório</td></tr>
+                <tr class="border-b border-ink/5"><td class="px-5 py-3 text-pine-deep">sei_fault</td><td class="px-5 py-3">400</td><td class="px-5 py-3 font-sans text-muted">o SEI rejeitou (ex.: processo inexistente)</td></tr>
+                <tr class="border-b border-ink/5"><td class="px-5 py-3 text-pine-deep">sei_indisponivel</td><td class="px-5 py-3">503</td><td class="px-5 py-3 font-sans text-muted">SEI fora do ar / sem conexão</td></tr>
+                <tr class="border-b border-ink/5"><td class="px-5 py-3 text-pine-deep">sei_timeout</td><td class="px-5 py-3">504</td><td class="px-5 py-3 font-sans text-muted">o SEI demorou demais</td></tr>
+                <tr class="border-b border-ink/5"><td class="px-5 py-3 text-pine-deep">sei_erro_http</td><td class="px-5 py-3">502</td><td class="px-5 py-3 font-sans text-muted">o SEI respondeu HTTP de erro</td></tr>
+                <tr><td class="px-5 py-3 text-pine-deep">resposta_invalida</td><td class="px-5 py-3">502</td><td class="px-5 py-3 font-sans text-muted">resposta do SEI ininteligível</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <footer class="pt-8 border-t border-ink/8 text-sm text-muted flex flex-wrap items-center justify-between gap-3">
+          <p>eusei · API read-only dos Web Services do SEI · Pernambuco</p>
+          <a href="./" class="text-pine hover:text-pine-deep transition">← Voltar ao início</a>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // realça o item do índice da seção visível
+    const links = [...document.querySelectorAll('.nav-link')];
+    const map = new Map(links.map(l => [l.getAttribute('href').slice(1), l]));
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const l = map.get(e.target.id); if (l) l.classList.add('active');
+      }});
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    document.querySelectorAll('main section[id]').forEach(s => obs.observe(s));
+  </script>
+</body>
+</html>

@@ -1,0 +1,825 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="Sei" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xmime="http://www.w3.org/2005/05/xmlmime" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+  <SOAP-ENV:Body>
+    <ns1:listarPaisesResponse>
+      <parametros SOAP-ENC:arrayType="ns1:Pais[204]" xsi:type="ns1:ArrayOfPais">
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">4</IdPais>
+          <Nome xsi:type="xsd:string">Afeganistão</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">710</IdPais>
+          <Nome xsi:type="xsd:string">África do Sul</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">8</IdPais>
+          <Nome xsi:type="xsd:string">Albânia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">276</IdPais>
+          <Nome xsi:type="xsd:string">Alemanha</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">20</IdPais>
+          <Nome xsi:type="xsd:string">Andorra</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">24</IdPais>
+          <Nome xsi:type="xsd:string">Angola</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">28</IdPais>
+          <Nome xsi:type="xsd:string">Antígua e Barbuda</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">682</IdPais>
+          <Nome xsi:type="xsd:string">Arábia Saudita</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">12</IdPais>
+          <Nome xsi:type="xsd:string">Argélia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">32</IdPais>
+          <Nome xsi:type="xsd:string">Argentina</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">51</IdPais>
+          <Nome xsi:type="xsd:string">Armênia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">36</IdPais>
+          <Nome xsi:type="xsd:string">Austrália</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">40</IdPais>
+          <Nome xsi:type="xsd:string">Áustria</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">31</IdPais>
+          <Nome xsi:type="xsd:string">Azerbaijão</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">44</IdPais>
+          <Nome xsi:type="xsd:string">Bahamas</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">48</IdPais>
+          <Nome xsi:type="xsd:string">Bahrain</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">50</IdPais>
+          <Nome xsi:type="xsd:string">Bangladesh</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">52</IdPais>
+          <Nome xsi:type="xsd:string">Barbados</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">56</IdPais>
+          <Nome xsi:type="xsd:string">Bélgica</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">84</IdPais>
+          <Nome xsi:type="xsd:string">Belize</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">204</IdPais>
+          <Nome xsi:type="xsd:string">Benim</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">112</IdPais>
+          <Nome xsi:type="xsd:string">Bielorrússia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">68</IdPais>
+          <Nome xsi:type="xsd:string">Bolívia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">70</IdPais>
+          <Nome xsi:type="xsd:string">Bósnia e Herzegovina</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">72</IdPais>
+          <Nome xsi:type="xsd:string">Botswana</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">76</IdPais>
+          <Nome xsi:type="xsd:string">Brasil</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">96</IdPais>
+          <Nome xsi:type="xsd:string">Brunei</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">100</IdPais>
+          <Nome xsi:type="xsd:string">Bulgária</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">854</IdPais>
+          <Nome xsi:type="xsd:string">Burkina Faso</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">108</IdPais>
+          <Nome xsi:type="xsd:string">Burundi</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">64</IdPais>
+          <Nome xsi:type="xsd:string">Butão</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">132</IdPais>
+          <Nome xsi:type="xsd:string">Cabo Verde</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">120</IdPais>
+          <Nome xsi:type="xsd:string">Camarões</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">116</IdPais>
+          <Nome xsi:type="xsd:string">Cambodja</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">124</IdPais>
+          <Nome xsi:type="xsd:string">Canadá</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">398</IdPais>
+          <Nome xsi:type="xsd:string">Cazaquistão</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">140</IdPais>
+          <Nome xsi:type="xsd:string">Centro-Africana, República</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">148</IdPais>
+          <Nome xsi:type="xsd:string">Chade</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">203</IdPais>
+          <Nome xsi:type="xsd:string">Checa, República</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">152</IdPais>
+          <Nome xsi:type="xsd:string">Chile</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">156</IdPais>
+          <Nome xsi:type="xsd:string">China</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">196</IdPais>
+          <Nome xsi:type="xsd:string">Chipre</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">170</IdPais>
+          <Nome xsi:type="xsd:string">Colômbia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">174</IdPais>
+          <Nome xsi:type="xsd:string">Comores</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">180</IdPais>
+          <Nome xsi:type="xsd:string">Congo, República Democrática do (antigo Zaire)</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">178</IdPais>
+          <Nome xsi:type="xsd:string">Congo, República do</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">410</IdPais>
+          <Nome xsi:type="xsd:string">Coréia do Sul</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">408</IdPais>
+          <Nome xsi:type="xsd:string">Coreia, República Democrática da (Coreia do Norte)</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">384</IdPais>
+          <Nome xsi:type="xsd:string">Costa do Marfim</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">188</IdPais>
+          <Nome xsi:type="xsd:string">Costa Rica</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">191</IdPais>
+          <Nome xsi:type="xsd:string">Croácia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">192</IdPais>
+          <Nome xsi:type="xsd:string">Cuba</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">208</IdPais>
+          <Nome xsi:type="xsd:string">Dinamarca</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">262</IdPais>
+          <Nome xsi:type="xsd:string">Djibouti</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">212</IdPais>
+          <Nome xsi:type="xsd:string">Dominica</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">214</IdPais>
+          <Nome xsi:type="xsd:string">Dominicana, República</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">818</IdPais>
+          <Nome xsi:type="xsd:string">Egito</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">222</IdPais>
+          <Nome xsi:type="xsd:string">El Salvador</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">784</IdPais>
+          <Nome xsi:type="xsd:string">Emirados Árabes Unidos</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">218</IdPais>
+          <Nome xsi:type="xsd:string">Equador</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">232</IdPais>
+          <Nome xsi:type="xsd:string">Eritreia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">703</IdPais>
+          <Nome xsi:type="xsd:string">Eslováquia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">705</IdPais>
+          <Nome xsi:type="xsd:string">Eslovênia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">724</IdPais>
+          <Nome xsi:type="xsd:string">Espanha</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">840</IdPais>
+          <Nome xsi:type="xsd:string">Estados Unidos da América</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">233</IdPais>
+          <Nome xsi:type="xsd:string">Estónia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">231</IdPais>
+          <Nome xsi:type="xsd:string">Etiópia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">242</IdPais>
+          <Nome xsi:type="xsd:string">Fiji</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">608</IdPais>
+          <Nome xsi:type="xsd:string">Filipinas</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">246</IdPais>
+          <Nome xsi:type="xsd:string">Finlândia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">250</IdPais>
+          <Nome xsi:type="xsd:string">França</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">266</IdPais>
+          <Nome xsi:type="xsd:string">Gabão</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">270</IdPais>
+          <Nome xsi:type="xsd:string">Gâmbia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">288</IdPais>
+          <Nome xsi:type="xsd:string">Gana</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">268</IdPais>
+          <Nome xsi:type="xsd:string">Geórgia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">300</IdPais>
+          <Nome xsi:type="xsd:string">Grécia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">308</IdPais>
+          <Nome xsi:type="xsd:string">Grenada</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">320</IdPais>
+          <Nome xsi:type="xsd:string">Guatemala</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">328</IdPais>
+          <Nome xsi:type="xsd:string">Guiana</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">254</IdPais>
+          <Nome xsi:type="xsd:string">Guiana Francesa</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">226</IdPais>
+          <Nome xsi:type="xsd:string">Guiné Equatorial</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">624</IdPais>
+          <Nome xsi:type="xsd:string">Guiné-Bissau</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">324</IdPais>
+          <Nome xsi:type="xsd:string">Guiné-Conacri</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">332</IdPais>
+          <Nome xsi:type="xsd:string">Haiti</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">340</IdPais>
+          <Nome xsi:type="xsd:string">Honduras</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">344</IdPais>
+          <Nome xsi:type="xsd:string">Hong Kong</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">348</IdPais>
+          <Nome xsi:type="xsd:string">Hungria</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">887</IdPais>
+          <Nome xsi:type="xsd:string">Iémen</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">356</IdPais>
+          <Nome xsi:type="xsd:string">Índia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">360</IdPais>
+          <Nome xsi:type="xsd:string">Indonésia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">364</IdPais>
+          <Nome xsi:type="xsd:string">Irã</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">368</IdPais>
+          <Nome xsi:type="xsd:string">Iraque</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">372</IdPais>
+          <Nome xsi:type="xsd:string">Irlanda</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">352</IdPais>
+          <Nome xsi:type="xsd:string">Islândia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">376</IdPais>
+          <Nome xsi:type="xsd:string">Israel</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">380</IdPais>
+          <Nome xsi:type="xsd:string">Itália</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">388</IdPais>
+          <Nome xsi:type="xsd:string">Jamaica</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">392</IdPais>
+          <Nome xsi:type="xsd:string">Japão</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">400</IdPais>
+          <Nome xsi:type="xsd:string">Jordânia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">296</IdPais>
+          <Nome xsi:type="xsd:string">Kiribati</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">414</IdPais>
+          <Nome xsi:type="xsd:string">Kuwait</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">418</IdPais>
+          <Nome xsi:type="xsd:string">Laos</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">426</IdPais>
+          <Nome xsi:type="xsd:string">Lesoto</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">428</IdPais>
+          <Nome xsi:type="xsd:string">Letônia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">422</IdPais>
+          <Nome xsi:type="xsd:string">Líbano</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">430</IdPais>
+          <Nome xsi:type="xsd:string">Libéria</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">434</IdPais>
+          <Nome xsi:type="xsd:string">Líbia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">438</IdPais>
+          <Nome xsi:type="xsd:string">Liechtenstein</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">440</IdPais>
+          <Nome xsi:type="xsd:string">Lituânia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">442</IdPais>
+          <Nome xsi:type="xsd:string">Luxemburgo</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">446</IdPais>
+          <Nome xsi:type="xsd:string">Macau</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">807</IdPais>
+          <Nome xsi:type="xsd:string">Macedônia, República da</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">450</IdPais>
+          <Nome xsi:type="xsd:string">Madagáscar</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">458</IdPais>
+          <Nome xsi:type="xsd:string">Malásia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">454</IdPais>
+          <Nome xsi:type="xsd:string">Malawi</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">462</IdPais>
+          <Nome xsi:type="xsd:string">Maldivas</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">466</IdPais>
+          <Nome xsi:type="xsd:string">Mali</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">470</IdPais>
+          <Nome xsi:type="xsd:string">Malta</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">580</IdPais>
+          <Nome xsi:type="xsd:string">Marianas Setentrionais</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">504</IdPais>
+          <Nome xsi:type="xsd:string">Marrocos</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">584</IdPais>
+          <Nome xsi:type="xsd:string">Marshall, Ilhas</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">480</IdPais>
+          <Nome xsi:type="xsd:string">Maurícia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">478</IdPais>
+          <Nome xsi:type="xsd:string">Mauritânia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">484</IdPais>
+          <Nome xsi:type="xsd:string">México</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">583</IdPais>
+          <Nome xsi:type="xsd:string">Micronésia, Estados Federados da</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">508</IdPais>
+          <Nome xsi:type="xsd:string">Moçambique</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">498</IdPais>
+          <Nome xsi:type="xsd:string">Moldávia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">492</IdPais>
+          <Nome xsi:type="xsd:string">Mônaco</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">496</IdPais>
+          <Nome xsi:type="xsd:string">Mongólia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">499</IdPais>
+          <Nome xsi:type="xsd:string">Montenegro</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">104</IdPais>
+          <Nome xsi:type="xsd:string">Myanmar (antiga Birmânia)</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">516</IdPais>
+          <Nome xsi:type="xsd:string">Namíbia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">520</IdPais>
+          <Nome xsi:type="xsd:string">Nauru</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">524</IdPais>
+          <Nome xsi:type="xsd:string">Nepal</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">558</IdPais>
+          <Nome xsi:type="xsd:string">Nicarágua</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">562</IdPais>
+          <Nome xsi:type="xsd:string">Níger</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">566</IdPais>
+          <Nome xsi:type="xsd:string">Nigéria</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">570</IdPais>
+          <Nome xsi:type="xsd:string">Niue</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">578</IdPais>
+          <Nome xsi:type="xsd:string">Noruega</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">540</IdPais>
+          <Nome xsi:type="xsd:string">Nova Caledônia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">554</IdPais>
+          <Nome xsi:type="xsd:string">Nova Zelândia (Aotearoa)</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">512</IdPais>
+          <Nome xsi:type="xsd:string">Oman</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">528</IdPais>
+          <Nome xsi:type="xsd:string">Países Baixos (Holanda)</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">585</IdPais>
+          <Nome xsi:type="xsd:string">Palau</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">275</IdPais>
+          <Nome xsi:type="xsd:string">Palestina</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">591</IdPais>
+          <Nome xsi:type="xsd:string">Panamá</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">598</IdPais>
+          <Nome xsi:type="xsd:string">Papua-Nova Guiné</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">586</IdPais>
+          <Nome xsi:type="xsd:string">Paquistão</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">600</IdPais>
+          <Nome xsi:type="xsd:string">Paraguai</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">604</IdPais>
+          <Nome xsi:type="xsd:string">Peru</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">258</IdPais>
+          <Nome xsi:type="xsd:string">Polinésia Francesa</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">616</IdPais>
+          <Nome xsi:type="xsd:string">Polônia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">630</IdPais>
+          <Nome xsi:type="xsd:string">Porto Rico</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">620</IdPais>
+          <Nome xsi:type="xsd:string">Portugal</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">634</IdPais>
+          <Nome xsi:type="xsd:string">Qatar</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">404</IdPais>
+          <Nome xsi:type="xsd:string">Quênia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">417</IdPais>
+          <Nome xsi:type="xsd:string">Quirguistão</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">826</IdPais>
+          <Nome xsi:type="xsd:string">Reino Unido da Grã-Bretanha e Irlanda do Norte</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">642</IdPais>
+          <Nome xsi:type="xsd:string">Romênia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">646</IdPais>
+          <Nome xsi:type="xsd:string">Ruanda</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">643</IdPais>
+          <Nome xsi:type="xsd:string">Rússia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">732</IdPais>
+          <Nome xsi:type="xsd:string">Saara Ocidental</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">90</IdPais>
+          <Nome xsi:type="xsd:string">Salomão, Ilhas</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">882</IdPais>
+          <Nome xsi:type="xsd:string">Samoa (Samoa Ocidental)</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">674</IdPais>
+          <Nome xsi:type="xsd:string">San Marino</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">662</IdPais>
+          <Nome xsi:type="xsd:string">Santa Lúcia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">659</IdPais>
+          <Nome xsi:type="xsd:string">São Cristóvão e Névis (Saint Kitts e Nevis)</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">678</IdPais>
+          <Nome xsi:type="xsd:string">São Tomé e Príncipe</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">670</IdPais>
+          <Nome xsi:type="xsd:string">São Vicente e Granadinas</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">686</IdPais>
+          <Nome xsi:type="xsd:string">Senegal</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">694</IdPais>
+          <Nome xsi:type="xsd:string">Serra Leoa</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">688</IdPais>
+          <Nome xsi:type="xsd:string">Sérvia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">690</IdPais>
+          <Nome xsi:type="xsd:string">Seychelles</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">702</IdPais>
+          <Nome xsi:type="xsd:string">Singapura</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">760</IdPais>
+          <Nome xsi:type="xsd:string">Síria</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">706</IdPais>
+          <Nome xsi:type="xsd:string">Somália</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">144</IdPais>
+          <Nome xsi:type="xsd:string">Sri Lanka</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">748</IdPais>
+          <Nome xsi:type="xsd:string">Suazilândia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">736</IdPais>
+          <Nome xsi:type="xsd:string">Sudão</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">752</IdPais>
+          <Nome xsi:type="xsd:string">Suécia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">756</IdPais>
+          <Nome xsi:type="xsd:string">Suíça</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">740</IdPais>
+          <Nome xsi:type="xsd:string">Suriname</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">764</IdPais>
+          <Nome xsi:type="xsd:string">Tailândia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">158</IdPais>
+          <Nome xsi:type="xsd:string">Taiwan</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">762</IdPais>
+          <Nome xsi:type="xsd:string">Tajiquistão</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">834</IdPais>
+          <Nome xsi:type="xsd:string">Tanzânia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">626</IdPais>
+          <Nome xsi:type="xsd:string">Timor-Leste</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">768</IdPais>
+          <Nome xsi:type="xsd:string">Togo</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">776</IdPais>
+          <Nome xsi:type="xsd:string">Tonga</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">780</IdPais>
+          <Nome xsi:type="xsd:string">Trindade e Tobago</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">788</IdPais>
+          <Nome xsi:type="xsd:string">Tunísia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">795</IdPais>
+          <Nome xsi:type="xsd:string">Turquemenistão</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">792</IdPais>
+          <Nome xsi:type="xsd:string">Turquia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">798</IdPais>
+          <Nome xsi:type="xsd:string">Tuvalu</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">804</IdPais>
+          <Nome xsi:type="xsd:string">Ucrânia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">800</IdPais>
+          <Nome xsi:type="xsd:string">Uganda</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">858</IdPais>
+          <Nome xsi:type="xsd:string">Uruguai</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">860</IdPais>
+          <Nome xsi:type="xsd:string">Usbequistão</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">548</IdPais>
+          <Nome xsi:type="xsd:string">Vanuatu</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">336</IdPais>
+          <Nome xsi:type="xsd:string">Vaticano</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">862</IdPais>
+          <Nome xsi:type="xsd:string">Venezuela</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">704</IdPais>
+          <Nome xsi:type="xsd:string">Vietnam</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">894</IdPais>
+          <Nome xsi:type="xsd:string">Zâmbia</Nome>
+        </item>
+        <item xsi:type="ns1:Pais">
+          <IdPais xsi:type="xsd:string">716</IdPais>
+          <Nome xsi:type="xsd:string">Zimbabwe</Nome>
+        </item>
+      </parametros>
+    </ns1:listarPaisesResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

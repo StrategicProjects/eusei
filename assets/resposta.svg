@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 300" width="384" role="img" aria-label="Estrutura da resposta de um processo" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <rect width="384" height="300" rx="16" fill="#FAF7F0"/>
+  <g transform="translate(0,4)">
+    <rect x="14" y="14" width="152" height="42" rx="12" fill="#0e6e5c"/>
+    <text x="90" y="40" text-anchor="middle" font-size="13" font-weight="700" fill="#f7f4ec">Procedimento</text>
+    <g stroke="#0e6e5c" stroke-opacity=".28" stroke-width="1.5" fill="none">
+      <path d="M44 56 V246"/>
+      <path d="M44 76 H196"/>
+      <path d="M44 110 H196"/>
+      <path d="M44 144 H196"/>
+      <path d="M44 178 H196"/>
+      <path d="M44 212 H196"/>
+      <path d="M44 246 H196"/>
+    </g>
+    <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11">
+      <g><rect x="196" y="63" width="172" height="26" rx="8" fill="#fff" stroke="#1b1e1c" stroke-opacity=".12"/><text x="209" y="80" fill="#1b1e1c">Especificacao</text></g>
+      <g><rect x="196" y="97" width="172" height="26" rx="8" fill="#fff" stroke="#0e6e5c" stroke-opacity=".3"/><text x="209" y="114" fill="#0b5848">TipoProcedimento {}</text></g>
+      <g><rect x="196" y="131" width="172" height="26" rx="8" fill="#fff" stroke="#0e6e5c" stroke-opacity=".3"/><text x="209" y="148" fill="#0b5848">AndamentoGeracao {}</text></g>
+      <g><rect x="196" y="165" width="172" height="26" rx="8" fill="#fff" stroke="#0e6e5c" stroke-opacity=".3"/><text x="209" y="182" fill="#0b5848">UltimoAndamento {}</text></g>
+      <g><rect x="196" y="199" width="172" height="26" rx="8" fill="#fff" stroke="#b8902a" stroke-opacity=".5"/><text x="209" y="216" fill="#8a6a12">Assuntos [ ]</text></g>
+      <g><rect x="196" y="233" width="172" height="26" rx="8" fill="#fff" stroke="#b8902a" stroke-opacity=".5"/><text x="209" y="250" fill="#8a6a12">Interessados [ ]</text></g>
+    </g>
+    <g font-size="10.5">
+      <rect x="16" y="270" width="11" height="11" rx="3" fill="#0b5848" fill-opacity=".2" stroke="#0b5848" stroke-opacity=".45"/>
+      <text x="33" y="279" fill="#5f655f">objeto { }</text>
+      <rect x="112" y="270" width="11" height="11" rx="3" fill="#b8902a" fill-opacity=".2" stroke="#b8902a" stroke-opacity=".55"/>
+      <text x="129" y="279" fill="#5f655f">array [ ]</text>
+    </g>
+  </g>
+</svg>

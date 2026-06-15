@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>eusei — API dos Web Services do SEI · Pernambuco</title>
+  <meta name="description" content="API HTTP/JSON read-only sobre os Web Services do SEI (Sistema Eletrônico de Informações) de Pernambuco."/>
+  <link rel="stylesheet" href="tailwind.css"/>
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NCIgaGVpZ2h0PSI0NCIgdmlld0JveD0iMCAwIDQ0IDQ0Ij48cmVjdCB3aWR0aD0iNDQiIGhlaWdodD0iNDQiIHJ4PSIxMSIgZmlsbD0iIzBFNkU1QyIvPjxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0Y0RUZFMyIgc3Ryb2tlLXdpZHRoPSIyLjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PHBhdGggZD0iTTEzIDE2SDMxIi8+PHBhdGggZD0iTTEzIDIySDI3Ii8+PHBhdGggZD0iTTEzIDI4SDIzIi8+PC9nPjxjaXJjbGUgY3g9IjMxLjUiIGN5PSIyOCIgcj0iMi42IiBmaWxsPSIjRThCMjNBIi8+PC9zdmc+"/>
+  <style>
+    @font-face { font-family:'Fraunces'; src:url('fraunces.woff2') format('woff2'); font-weight:300 700; font-display:swap; }
+    @font-face { font-family:'Spline Sans'; src:url('splinesans.woff2') format('woff2'); font-weight:300 700; font-display:swap; }
+    /* atmosfera: leve grão + brilho superior */
+    body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+      background:radial-gradient(120% 80% at 50% -10%, rgba(14,110,92,.10), transparent 60%);}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+    .reveal{opacity:0;animation:fadeUp .7s cubic-bezier(.2,.7,.2,1) forwards}
+    ::selection{background:rgba(14,110,92,.18)}
+  </style>
+</head>
+<body class="min-h-screen bg-paper text-ink font-sans antialiased selection:bg-pine/15">
+  <div class="relative z-10">
+
+    <!-- topo -->
+    <header class="mx-auto max-w-6xl px-6 py-6 flex items-center justify-between">
+      <a href="./" class="flex items-center gap-3">
+        <span class="grid place-items-center w-10 h-10 rounded-xl bg-gradient-to-br from-pine to-pine-deep shadow-lg shadow-pine/30">
+          <svg viewBox="0 0 44 44" class="w-6 h-6" fill="none" aria-hidden="true">
+            <g stroke="#F4EFE3" stroke-width="2.6" stroke-linecap="round"><path d="M13 16H31"/><path d="M13 22H27"/><path d="M13 28H23"/></g>
+            <circle cx="31.5" cy="28" r="2.8" fill="#E8B23A"/>
+          </svg>
+        </span>
+        <span class="font-display text-2xl font-semibold tracking-tight">eusei</span>
+      </a>
+      <nav class="flex items-center gap-2 text-sm">
+        <a href="__docs__" class="px-3.5 py-2 rounded-lg text-muted hover:text-ink hover:bg-paper-2 transition">Documentação</a>
+        <a href="openapi.json" class="px-3.5 py-2 rounded-lg text-muted hover:text-ink hover:bg-paper-2 transition">openapi.json</a>
+        <a href="__docs__" class="px-3.5 py-2 rounded-lg bg-pine text-paper font-medium shadow-sm hover:bg-pine-deep transition">Referência da API →</a>
+      </nav>
+    </header>
+
+    <!-- hero -->
+    <section class="mx-auto max-w-6xl px-6 pt-12 pb-16 grid lg:grid-cols-[1.1fr_.9fr] gap-12 items-center">
+      <div class="reveal" style="animation-delay:.05s">
+        <span class="inline-flex items-center gap-2 text-xs font-medium tracking-wide uppercase text-pine bg-pine/10 px-3 py-1.5 rounded-full">
+          <span class="w-1.5 h-1.5 rounded-full bg-pine"></span> read-only · SEI Pernambuco
+        </span>
+        <h1 class="font-display font-semibold tracking-tight text-5xl sm:text-6xl leading-[1.02] mt-6">
+          Consultas do SEI<br/><span class="text-pine">em JSON</span>, simples.
+        </h1>
+        <p class="text-lg text-muted leading-relaxed mt-6 max-w-xl">
+          API HTTP que conversa com os Web Services SOAP do <abbr title="Sistema Eletrônico de Informações" class="no-underline border-b border-dotted border-muted/40">SEI</abbr>
+          e devolve <span class="text-ink font-medium">JSON limpo</span>: processos, documentos, andamentos e listas — espelhando o pacote R <code class="font-mono text-sm text-pine-deep bg-pine/8 px-1.5 py-0.5 rounded">rsei</code>.
+        </p>
+        <div class="flex flex-wrap items-center gap-3 mt-8">
+          <a href="__docs__" class="px-5 py-3 rounded-xl bg-pine text-paper font-medium shadow-lg shadow-pine/25 hover:bg-pine-deep hover:-translate-y-0.5 transition">Explorar a documentação</a>
+          <a href="#inicio" class="px-5 py-3 rounded-xl border border-ink/10 hover:border-ink/25 hover:bg-paper-2 transition">Início rápido</a>
+        </div>
+      </div>
+
+      <!-- cartão de exemplo -->
+      <div class="reveal" style="animation-delay:.18s">
+        <div class="rounded-2xl border border-ink/8 bg-pine-ink text-paper shadow-2xl shadow-pine-ink/20 overflow-hidden">
+          <div class="flex items-center gap-1.5 px-4 py-3 border-b border-white/10">
+            <span class="w-3 h-3 rounded-full bg-[#ff5f57]"></span>
+            <span class="w-3 h-3 rounded-full bg-[#febc2e]"></span>
+            <span class="w-3 h-3 rounded-full bg-[#28c840]"></span>
+            <span class="ml-3 text-xs text-paper/60 font-mono">consultar processo</span>
+          </div>
+          <pre class="px-5 py-4 text-[13px] leading-relaxed font-mono overflow-x-auto"><span class="text-gold">curl</span> -H <span class="text-emerald-300">'Authorization: Bearer SEU_TOKEN'</span> \
+  <span class="text-emerald-300">'…/eusei/v1/procedimento?protocolo=0011108545.000056/2022-49'</span>
+
+<span class="text-paper/50">{</span>
+  <span class="text-paper/50">"ok"</span>: <span class="text-gold">true</span>,
+  <span class="text-paper/50">"dados"</span>: {
+    <span class="text-paper/50">"ProcedimentoFormatado"</span>: <span class="text-emerald-300">"0011108545.000056/2022-49"</span>,
+    <span class="text-paper/50">"Especificacao"</span>: <span class="text-emerald-300">"TOMADA DE PREÇOS …"</span>,
+    <span class="text-paper/50">"TipoProcedimento"</span>: { <span class="text-paper/50">"Nome"</span>: <span class="text-emerald-300">"Licitação…"</span> }
+  <span class="text-paper/50">}</span>
+<span class="text-paper/50">}</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- início rápido -->
+    <section id="inicio" class="mx-auto max-w-6xl px-6 py-12 scroll-mt-20">
+      <h2 class="font-display text-3xl font-semibold tracking-tight">Início rápido</h2>
+      <div class="grid md:grid-cols-3 gap-5 mt-8">
+        <div class="rounded-2xl border border-ink/8 bg-white/50 p-6">
+          <div class="font-display text-pine text-xl font-semibold">1 · Autenticação</div>
+          <p class="text-muted mt-2 leading-relaxed">Toda rota <code class="font-mono text-sm text-pine-deep">/v1</code> exige o cabeçalho:</p>
+          <pre class="mt-3 text-xs font-mono bg-paper-2 rounded-lg p-3 overflow-x-auto">Authorization: Bearer &lt;token&gt;</pre>
+        </div>
+        <div class="rounded-2xl border border-ink/8 bg-white/50 p-6">
+          <div class="font-display text-pine text-xl font-semibold">2 · Protocolo na query</div>
+          <p class="text-muted mt-2 leading-relaxed">Passe o número por <code class="font-mono text-sm text-pine-deep">?protocolo=</code> (a barra sobrevive ao proxy):</p>
+          <pre class="mt-3 text-xs font-mono bg-paper-2 rounded-lg p-3 overflow-x-auto">/v1/procedimento?protocolo=…/2022-49</pre>
+        </div>
+        <div class="rounded-2xl border border-ink/8 bg-white/50 p-6">
+          <div class="font-display text-pine text-xl font-semibold">3 · Resposta</div>
+          <p class="text-muted mt-2 leading-relaxed">Sempre JSON. Erros trazem um <code class="font-mono text-sm text-pine-deep">codigo</code> estável e status HTTP coerente.</p>
+          <pre class="mt-3 text-xs font-mono bg-paper-2 rounded-lg p-3 overflow-x-auto">{ "ok": true, "dados": … }</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- grupos de endpoints -->
+    <section class="mx-auto max-w-6xl px-6 py-12">
+      <h2 class="font-display text-3xl font-semibold tracking-tight">O que dá para consultar</h2>
+      <div class="grid md:grid-cols-3 gap-5 mt-8">
+        <div class="rounded-2xl border border-ink/8 bg-white/50 p-6 hover:border-pine/30 hover:shadow-lg hover:shadow-pine/5 transition">
+          <h3 class="font-display text-xl font-semibold">Processos & documentos</h3>
+          <ul class="mt-4 space-y-2 font-mono text-sm text-muted">
+            <li><span class="text-pine">GET</span> /v1/procedimento</li>
+            <li><span class="text-pine">GET</span> /v1/procedimentos <span class="text-muted/60">(lote)</span></li>
+            <li><span class="text-pine">GET</span> /v1/documento</li>
+            <li><span class="text-pine">GET</span> /v1/publicacao</li>
+            <li><span class="text-pine">GET</span> /v1/bloco</li>
+          </ul>
+        </div>
+        <div class="rounded-2xl border border-ink/8 bg-white/50 p-6 hover:border-pine/30 hover:shadow-lg hover:shadow-pine/5 transition">
+          <h3 class="font-display text-xl font-semibold">Andamentos</h3>
+          <ul class="mt-4 space-y-2 font-mono text-sm text-muted">
+            <li><span class="text-pine">GET</span> /v1/andamentos</li>
+            <li><span class="text-pine">GET</span> /v1/documentos-processo</li>
+            <li><span class="text-pine">GET</span> /v1/publicacoes-processo</li>
+          </ul>
+          <p class="text-sm text-muted mt-4 leading-relaxed font-sans">Linha do tempo completa do processo, os documentos derivados dela e suas publicações.</p>
+        </div>
+        <div class="rounded-2xl border border-ink/8 bg-white/50 p-6 hover:border-pine/30 hover:shadow-lg hover:shadow-pine/5 transition">
+          <h3 class="font-display text-xl font-semibold">Listas</h3>
+          <ul class="mt-4 space-y-2 font-mono text-sm text-muted">
+            <li><span class="text-pine">GET</span> /v1/unidades · /series</li>
+            <li><span class="text-pine">GET</span> /v1/tipos-procedimento</li>
+            <li><span class="text-pine">GET</span> /v1/paises · /estados · /cidades</li>
+            <li><span class="text-pine">GET</span> /v1/cargos · /hipoteses-legais</li>
+            <li><span class="text-muted/60">+ 6 outras</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="mt-8">
+        <a href="__docs__" class="inline-flex items-center gap-2 text-pine font-medium hover:gap-3 transition-all">Ver todas as rotas na referência <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
+
+    <!-- rodapé -->
+    <footer class="mx-auto max-w-6xl px-6 py-12 mt-8 border-t border-ink/8">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-sm text-muted">
+        <p>eusei · API read-only dos Web Services do SEI · Pernambuco</p>
+        <div class="flex items-center gap-4">
+          <a href="__docs__" class="hover:text-ink transition">Documentação</a>
+          <a href="openapi.json" class="hover:text-ink transition">OpenAPI</a>
+          <a href="health" class="hover:text-ink transition">Status</a>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,9 @@
+/target
+.env
+*.env
+!.env.example
+
+# config local de ferramentas / SO
+.claude/
+.DS_Store
+**/.DS_Store

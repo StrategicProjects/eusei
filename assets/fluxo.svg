@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 180" width="900" role="img" aria-label="Fluxo de uma requisição eusei" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <rect width="900" height="180" rx="18" fill="#FAF7F0"/>
+  <defs>
+    <marker id="fwd" markerWidth="7" markerHeight="7" refX="5.2" refY="3" orient="auto"><path d="M0 0L6 3L0 6Z" fill="#0e6e5c"/></marker>
+    <marker id="ret" markerWidth="7" markerHeight="7" refX="5.2" refY="3" orient="auto"><path d="M0 0L6 3L0 6Z" fill="#b8902a"/></marker>
+    <linearGradient id="eg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0e7c66"/><stop offset="1" stop-color="#0b5848"/></linearGradient>
+  </defs>
+  <text x="32" y="28" font-size="13" font-weight="600" fill="#5f655f">Fluxo de uma requisição</text>
+  <g transform="translate(0,12)">
+    <g>
+      <rect x="12" y="34" width="156" height="56" rx="14" fill="#ffffff" stroke="#1b1e1c" stroke-opacity=".12"/>
+      <text x="90" y="60" text-anchor="middle" font-size="15" font-weight="600" fill="#1b1e1c">Cliente</text>
+      <text x="90" y="78" text-anchor="middle" font-size="11" fill="#5f655f">seu app / script</text>
+    </g>
+    <g>
+      <rect x="256" y="34" width="156" height="56" rx="14" fill="#ffffff" stroke="#1b1e1c" stroke-opacity=".12"/>
+      <text x="334" y="60" text-anchor="middle" font-size="15" font-weight="600" fill="#1b1e1c">nginx</text>
+      <text x="334" y="78" text-anchor="middle" font-size="11" fill="#5f655f">TLS · /eusei</text>
+    </g>
+    <g>
+      <rect x="500" y="34" width="156" height="56" rx="14" fill="url(#eg)"/>
+      <text x="578" y="60" text-anchor="middle" font-size="15" font-weight="700" fill="#f7f4ec">eusei</text>
+      <text x="578" y="78" text-anchor="middle" font-size="11" fill="#cfe6df">Rust · :18088</text>
+    </g>
+    <g>
+      <rect x="744" y="34" width="144" height="56" rx="14" fill="#12201c"/>
+      <text x="816" y="60" text-anchor="middle" font-size="15" font-weight="600" fill="#f7f4ec">SEI</text>
+      <text x="816" y="78" text-anchor="middle" font-size="11" fill="#9db8ae">SOAP / XML</text>
+    </g>
+    <g stroke="#0e6e5c" stroke-width="1.75" fill="none">
+      <line x1="168" y1="62" x2="250" y2="62" marker-end="url(#fwd)"/>
+      <line x1="412" y1="62" x2="494" y2="62" marker-end="url(#fwd)"/>
+      <line x1="656" y1="62" x2="738" y2="62" marker-end="url(#fwd)"/>
+    </g>
+    <text x="209" y="53" text-anchor="middle" font-size="10.5" fill="#5f655f">Bearer</text>
+    <text x="697" y="53" text-anchor="middle" font-size="10.5" fill="#5f655f">consulta</text>
+    <path d="M816 90 V132 H90 V92" fill="none" stroke="#b8902a" stroke-width="1.75" stroke-linejoin="round" marker-end="url(#ret)"/>
+    <rect x="430" y="122" width="56" height="20" rx="10" fill="#FAF7F0"/>
+    <text x="458" y="136" text-anchor="middle" font-size="11" font-weight="600" fill="#b8902a">JSON</text>
+  </g>
+</svg>
