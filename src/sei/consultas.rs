@@ -15,12 +15,9 @@ fn ok(dados: Value) -> Resp {
     Ok(Json(json!({ "ok": true, "dados": dados })))
 }
 
-/// Resolve um sinalizador "S"/"N", default "S".
-fn sn(opt: &Option<String>) -> String {
-    match opt.as_deref() {
-        Some("N") | Some("n") => "N".into(),
-        _ => "S".into(),
-    }
+/// Resolve um sinalizador "S"/"N" (default "S"); valor fora de S/N → 400.
+fn sn(opt: &Option<String>) -> Result<String, AppError> {
+    super::flag_sn(opt, true)
 }
 
 // ---- consultarProcedimento ------------------------------------------------
@@ -38,19 +35,19 @@ pub struct ProcFlags {
     pub sin_retornar_procedimentos_anexados: Option<String>,
 }
 
-fn proc_params(protocolo: String, f: &ProcFlags) -> Vec<(&'static str, String)> {
-    vec![
+fn proc_params(protocolo: String, f: &ProcFlags) -> Result<Vec<(&'static str, String)>, AppError> {
+    Ok(vec![
         ("ProtocoloProcedimento", protocolo),
-        ("SinRetornarAssuntos", sn(&f.sin_retornar_assuntos)),
-        ("SinRetornarInteressados", sn(&f.sin_retornar_interessados)),
-        ("SinRetornarObservacoes", sn(&f.sin_retornar_observacoes)),
-        ("SinRetornarAndamentoGeracao", sn(&f.sin_retornar_andamento_geracao)),
-        ("SinRetornarAndamentoConclusao", sn(&f.sin_retornar_andamento_conclusao)),
-        ("SinRetornarUltimoAndamento", sn(&f.sin_retornar_ultimo_andamento)),
-        ("SinRetornarUnidadesProcedimentoAberto", sn(&f.sin_retornar_unidades_procedimento_aberto)),
-        ("SinRetornarProcedimentosRelacionados", sn(&f.sin_retornar_procedimentos_relacionados)),
-        ("SinRetornarProcedimentosAnexados", sn(&f.sin_retornar_procedimentos_anexados)),
-    ]
+        ("SinRetornarAssuntos", sn(&f.sin_retornar_assuntos)?),
+        ("SinRetornarInteressados", sn(&f.sin_retornar_interessados)?),
+        ("SinRetornarObservacoes", sn(&f.sin_retornar_observacoes)?),
+        ("SinRetornarAndamentoGeracao", sn(&f.sin_retornar_andamento_geracao)?),
+        ("SinRetornarAndamentoConclusao", sn(&f.sin_retornar_andamento_conclusao)?),
+        ("SinRetornarUltimoAndamento", sn(&f.sin_retornar_ultimo_andamento)?),
+        ("SinRetornarUnidadesProcedimentoAberto", sn(&f.sin_retornar_unidades_procedimento_aberto)?),
+        ("SinRetornarProcedimentosRelacionados", sn(&f.sin_retornar_procedimentos_relacionados)?),
+        ("SinRetornarProcedimentosAnexados", sn(&f.sin_retornar_procedimentos_anexados)?),
+    ])
 }
 
 pub async fn procedimento(
@@ -58,7 +55,7 @@ pub async fn procedimento(
     Path(protocolo): Path<String>,
     Query(f): Query<ProcFlags>,
 ) -> Resp {
-    let dados = super::call(&s, "consultarProcedimento", true, &proc_params(protocolo, &f)).await?;
+    let dados = super::call(&s, "consultarProcedimento", true, &proc_params(protocolo, &f)?).await?;
     ok(dados)
 }
 
@@ -77,7 +74,7 @@ pub async fn procedimento_q(State(s): State<AppState>, Query(q): Query<ProcOneQu
         .protocolo
         .filter(|v| !v.is_empty())
         .ok_or_else(|| AppError::BadRequest("parâmetro obrigatório ausente: protocolo".into()))?;
-    let dados = super::call(&s, "consultarProcedimento", true, &proc_params(protocolo, &q.flags)).await?;
+    let dados = super::call(&s, "consultarProcedimento", true, &proc_params(protocolo, &q.flags)?).await?;
     ok(dados)
 }
 
@@ -98,7 +95,7 @@ pub async fn procedimentos(State(s): State<AppState>, Query(q): Query<ProcsQuery
         .ok_or_else(|| AppError::BadRequest("parâmetro obrigatório ausente: protocolos".into()))?;
     let mut itens = Vec::new();
     for p in protocolos.split(',').map(|x| x.trim()).filter(|x| !x.is_empty()) {
-        let params = proc_params(p.to_string(), &q.flags);
+        let params = proc_params(p.to_string(), &q.flags)?;
         match super::call(&s, "consultarProcedimento", true, &params).await {
             Ok(dados) => itens.push(json!({ "protocolo": p, "dados": dados, "erro": Value::Null })),
             Err(e) => itens.push(json!({ "protocolo": p, "dados": Value::Null, "erro": e.to_string() })),
@@ -117,14 +114,14 @@ pub struct DocFlags {
     pub sin_retornar_campos: Option<String>,
 }
 
-fn doc_params(protocolo: String, f: &DocFlags) -> Vec<(&'static str, String)> {
-    vec![
+fn doc_params(protocolo: String, f: &DocFlags) -> Result<Vec<(&'static str, String)>, AppError> {
+    Ok(vec![
         ("ProtocoloDocumento", protocolo),
-        ("SinRetornarAndamentoGeracao", sn(&f.sin_retornar_andamento_geracao)),
-        ("SinRetornarAssinaturas", sn(&f.sin_retornar_assinaturas)),
-        ("SinRetornarPublicacao", sn(&f.sin_retornar_publicacao)),
-        ("SinRetornarCampos", sn(&f.sin_retornar_campos)),
-    ]
+        ("SinRetornarAndamentoGeracao", sn(&f.sin_retornar_andamento_geracao)?),
+        ("SinRetornarAssinaturas", sn(&f.sin_retornar_assinaturas)?),
+        ("SinRetornarPublicacao", sn(&f.sin_retornar_publicacao)?),
+        ("SinRetornarCampos", sn(&f.sin_retornar_campos)?),
+    ])
 }
 
 pub async fn documento(
@@ -132,7 +129,7 @@ pub async fn documento(
     Path(protocolo): Path<String>,
     Query(f): Query<DocFlags>,
 ) -> Resp {
-    let dados = super::call(&s, "consultarDocumento", true, &doc_params(protocolo, &f)).await?;
+    let dados = super::call(&s, "consultarDocumento", true, &doc_params(protocolo, &f)?).await?;
     ok(dados)
 }
 
@@ -152,7 +149,7 @@ pub async fn documentos(State(s): State<AppState>, Query(q): Query<DocsQuery>) -
         .ok_or_else(|| AppError::BadRequest("parâmetro obrigatório ausente: protocolos".into()))?;
     let mut itens = Vec::new();
     for p in protocolos.split(',').map(|x| x.trim()).filter(|x| !x.is_empty()) {
-        let params = doc_params(p.to_string(), &q.flags);
+        let params = doc_params(p.to_string(), &q.flags)?;
         match super::call(&s, "consultarDocumento", true, &params).await {
             Ok(dados) => itens.push(json!({ "protocolo": p, "dados": dados, "erro": Value::Null })),
             Err(e) => itens.push(json!({ "protocolo": p, "dados": Value::Null, "erro": e.to_string() })),
@@ -174,7 +171,7 @@ pub async fn documento_q(State(s): State<AppState>, Query(q): Query<DocOneQuery>
         .protocolo
         .filter(|v| !v.is_empty())
         .ok_or_else(|| AppError::BadRequest("parâmetro obrigatório ausente: protocolo".into()))?;
-    let dados = super::call(&s, "consultarDocumento", true, &doc_params(protocolo, &q.flags)).await?;
+    let dados = super::call(&s, "consultarDocumento", true, &doc_params(protocolo, &q.flags)?).await?;
     ok(dados)
 }
 
@@ -205,8 +202,8 @@ pub async fn publicacao(State(s): State<AppState>, Query(q): Query<PublicacaoQue
     if let Some(v) = id_publicacao { extra.push(("IdPublicacao", v)); }
     if let Some(v) = id_documento { extra.push(("IdDocumento", v)); }
     if let Some(v) = protocolo_documento { extra.push(("ProtocoloDocumento", v)); }
-    extra.push(("SinRetornarAndamento", sn(&q.sin_retornar_andamento)));
-    extra.push(("SinRetornarAssinaturas", sn(&q.sin_retornar_assinaturas)));
+    extra.push(("SinRetornarAndamento", sn(&q.sin_retornar_andamento)?));
+    extra.push(("SinRetornarAssinaturas", sn(&q.sin_retornar_assinaturas)?));
     let dados = super::call(&s, "consultarPublicacao", true, &extra).await?;
     ok(dados)
 }
@@ -218,13 +215,10 @@ pub struct BlocoQuery {
     pub sin_retornar_protocolos: Option<String>,
 }
 
-fn bloco_params(id_bloco: String, sin_retornar_protocolos: &Option<String>) -> Vec<(&'static str, String)> {
+fn bloco_params(id_bloco: String, sin_retornar_protocolos: &Option<String>) -> Result<Vec<(&'static str, String)>, AppError> {
     // default deste sinalizador é "N"
-    let srp = match sin_retornar_protocolos.as_deref() {
-        Some("S") | Some("s") => "S".to_string(),
-        _ => "N".to_string(),
-    };
-    vec![("IdBloco", id_bloco), ("SinRetornarProtocolos", srp)]
+    let srp = super::flag_sn(sin_retornar_protocolos, false)?;
+    Ok(vec![("IdBloco", id_bloco), ("SinRetornarProtocolos", srp)])
 }
 
 pub async fn bloco(
@@ -232,7 +226,7 @@ pub async fn bloco(
     Path(id_bloco): Path<String>,
     Query(q): Query<BlocoQuery>,
 ) -> Resp {
-    let dados = super::call(&s, "consultarBloco", true, &bloco_params(id_bloco, &q.sin_retornar_protocolos)).await?;
+    let dados = super::call(&s, "consultarBloco", true, &bloco_params(id_bloco, &q.sin_retornar_protocolos)?).await?;
     ok(dados)
 }
 
@@ -248,7 +242,7 @@ pub async fn bloco_q(State(s): State<AppState>, Query(q): Query<BlocoOneQuery>) 
         .id
         .filter(|v| !v.is_empty())
         .ok_or_else(|| AppError::BadRequest("parâmetro obrigatório ausente: id".into()))?;
-    let dados = super::call(&s, "consultarBloco", true, &bloco_params(id, &q.sin_retornar_protocolos)).await?;
+    let dados = super::call(&s, "consultarBloco", true, &bloco_params(id, &q.sin_retornar_protocolos)?).await?;
     ok(dados)
 }
 
