@@ -3,8 +3,9 @@
 *.env
 !.env.example
 
-# notas locais do Claude Code / planejamento (não versionados)
+# notas locais de agentes / planejamento (não versionados)
 CLAUDE.md
+AGENTS.md
 PLAN.md
 
 # config local de ferramentas / SO
