@@ -3,6 +3,10 @@
 *.env
 !.env.example
 
+# notas locais do Claude Code / planejamento (não versionados)
+CLAUDE.md
+PLAN.md
+
 # config local de ferramentas / SO
 .claude/
 .DS_Store
