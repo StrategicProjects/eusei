@@ -179,15 +179,21 @@ pub struct PublicacaoQuery {
 }
 
 pub async fn publicacao(State(s): State<AppState>, Query(q): Query<PublicacaoQuery>) -> Resp {
-    if q.id_publicacao.is_none() && q.id_documento.is_none() && q.protocolo_documento.is_none() {
+    // descarta valores vazios (`?id_documento=`) para não enviá-los ao SEI nem
+    // contá-los como identificador presente.
+    let naovazio = |v: Option<String>| v.filter(|s| !s.trim().is_empty());
+    let id_publicacao = naovazio(q.id_publicacao);
+    let id_documento = naovazio(q.id_documento);
+    let protocolo_documento = naovazio(q.protocolo_documento);
+    if id_publicacao.is_none() && id_documento.is_none() && protocolo_documento.is_none() {
         return Err(AppError::BadRequest(
             "informe ao menos um de: id_publicacao, id_documento ou protocolo_documento".into(),
         ));
     }
     let mut extra: Vec<(&str, String)> = Vec::new();
-    if let Some(v) = q.id_publicacao { extra.push(("IdPublicacao", v)); }
-    if let Some(v) = q.id_documento { extra.push(("IdDocumento", v)); }
-    if let Some(v) = q.protocolo_documento { extra.push(("ProtocoloDocumento", v)); }
+    if let Some(v) = id_publicacao { extra.push(("IdPublicacao", v)); }
+    if let Some(v) = id_documento { extra.push(("IdDocumento", v)); }
+    if let Some(v) = protocolo_documento { extra.push(("ProtocoloDocumento", v)); }
     extra.push(("SinRetornarAndamento", sn(&q.sin_retornar_andamento)));
     extra.push(("SinRetornarAssinaturas", sn(&q.sin_retornar_assinaturas)));
     let dados = super::call(&s, "consultarPublicacao", true, &extra).await?;

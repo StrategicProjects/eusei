@@ -95,8 +95,9 @@ Só o servidor fala com o SEI e compila o binário Linux de destino. Ciclo:
 
 ```sh
 # 1. editar local (mac)
-# 2. sincronizar para o servidor
-rsync -az --delete --exclude target --exclude .git ./ servidor:~/eusei_dev/
+# 2. sincronizar para o servidor — use SEMPRE caminho ABSOLUTO na origem;
+#    com `./` e um cwd "sujo", o --delete pode apagar a pasta errada no destino.
+rsync -az --delete --exclude target --exclude .git /caminho/abs/eusei/ servidor:~/eusei_dev/
 # 3. no servidor
 ssh servidor 'cd ~/eusei_dev && ~/.cargo/bin/cargo build && cp .env.example .env && ~/.cargo/bin/cargo run'
 ```
@@ -198,7 +199,7 @@ dependência de rede externa). O CSS do Tailwind (cobre `index.html` e `docs.htm
 
 ```sh
 cd /tmp && npm i tailwindcss @tailwindcss/cli && \
-  cp <repo>/static/{tw-input.css,index.html} . && \
+  cp <repo>/static/{tw-input.css,index.html,docs.html} . && \
   npx @tailwindcss/cli -i tw-input.css -o tailwind.css --minify && \
   cp tailwind.css <repo>/static/tailwind.css
 ```
