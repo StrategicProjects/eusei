@@ -96,10 +96,7 @@ async fn fetch_andamentos(state: &AppState, q: &AndamentosQuery) -> Result<Value
         tarefas = (1..=200).map(|n| n.to_string()).collect();
     }
 
-    let sra = match q.sin_retornar_atributos.as_deref() {
-        Some("S") | Some("s") => "S".to_string(),
-        _ => "N".to_string(),
-    };
+    let sra = super::flag_sn(&q.sin_retornar_atributos, false)?;
 
     let mut extra: Vec<(&str, Param)> = vec![
         ("ProtocoloProcedimento", Param::Scalar(protocolo)),

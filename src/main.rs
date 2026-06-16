@@ -2,6 +2,7 @@
 //! Roda no servidor de aplicação (único host com acesso liberado ao SEI) e
 //! expõe consultas read-only espelhando o pacote R `rsei`.
 
+mod app;
 mod auth;
 mod config;
 mod docs;
@@ -14,9 +15,7 @@ mod state;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use axum::{middleware, routing::get, Json, Router};
 use config::AppConfig;
-use serde_json::json;
 use state::AppState;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
@@ -49,29 +48,10 @@ async fn main() {
         http: reqwest::Client::new(),
     };
 
-    let protected = routes::router()
-        .route_layer(middleware::from_fn_with_state(state.clone(), auth::require_bearer));
+    let sei_url = state.cfg.sei.url.clone();
+    let app = app::build_app(state).layer(TraceLayer::new_for_http());
 
-    let app = Router::new()
-        .route("/health", get(health))
-        // landing page (Tailwind v4, pública)
-        .route("/", get(docs::index))
-        .route("/tailwind.css", get(docs::tailwind))
-        // documentação online (pública, Tailwind)
-        .route("/__docs__", get(docs::docs))
-        .route("/__docs__/", get(docs::docs))
-        .route("/__docs__/openapi.json", get(docs::openapi))
-        .route("/__docs__/tailwind.css", get(docs::tailwind))
-        .route("/__docs__/fraunces.woff2", get(docs::font_fraunces))
-        .route("/__docs__/splinesans.woff2", get(docs::font_spline))
-        .route("/openapi.json", get(docs::openapi))
-        .route("/fraunces.woff2", get(docs::font_fraunces))
-        .route("/splinesans.woff2", get(docs::font_spline))
-        .nest("/v1", protected)
-        .layer(TraceLayer::new_for_http())
-        .with_state(state.clone());
-
-    tracing::info!(%addr, sei_url = %state.cfg.sei.url, "eusei iniciando");
+    tracing::info!(%addr, sei_url = %sei_url, "eusei iniciando");
 
     let listener = tokio::net::TcpListener::bind(addr)
         .await
@@ -81,10 +61,6 @@ async fn main() {
         .with_graceful_shutdown(shutdown_signal())
         .await
         .expect("falha ao servir");
-}
-
-async fn health() -> Json<serde_json::Value> {
-    Json(json!({ "ok": true, "service": "eusei", "version": env!("CARGO_PKG_VERSION") }))
 }
 
 async fn shutdown_signal() {

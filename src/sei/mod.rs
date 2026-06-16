@@ -10,6 +10,37 @@ use serde_json::Value;
 
 use crate::{error::AppError, soap, soap::envelope::Param, state::AppState};
 
+/// Normaliza um sinalizador "S"/"N" do SEI. Aceita `S`/`s`/`N`/`n` (e
+/// vazio/ausente → o default); qualquer outro valor vira `400`, em vez de ser
+/// coagido silenciosamente para "S" (o OpenAPI declara `enum: [S, N]`).
+pub(crate) fn flag_sn(opt: &Option<String>, default_s: bool) -> Result<String, AppError> {
+    match opt.as_deref().map(str::trim) {
+        None | Some("") => Ok(if default_s { "S" } else { "N" }.to_string()),
+        Some("S") | Some("s") => Ok("S".to_string()),
+        Some("N") | Some("n") => Ok("N".to_string()),
+        Some(other) => Err(AppError::BadRequest(format!(
+            "valor inválido para sinalizador S/N: '{other}' (use S ou N)"
+        ))),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::flag_sn;
+    use crate::error::AppError;
+
+    #[test]
+    fn flag_sn_normaliza_e_rejeita_invalido() {
+        assert_eq!(flag_sn(&None, true).unwrap(), "S");
+        assert_eq!(flag_sn(&None, false).unwrap(), "N");
+        assert_eq!(flag_sn(&Some("".into()), true).unwrap(), "S");
+        assert_eq!(flag_sn(&Some("s".into()), false).unwrap(), "S");
+        assert_eq!(flag_sn(&Some("N".into()), true).unwrap(), "N");
+        let err = flag_sn(&Some("talvez".into()), true).unwrap_err();
+        assert!(matches!(err, AppError::BadRequest(_)));
+    }
+}
+
 /// Executa uma operação read-only do SEI com parâmetros escalares.
 ///
 /// Injeta `SiglaSistema` e `IdentificacaoServico` (e `IdUnidade` quando
