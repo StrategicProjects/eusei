@@ -61,7 +61,22 @@ pub struct AndamentosQuery {
     pub tarefas_modulos: Option<String>,
     pub sin_retornar_atributos: Option<String>,
     /// Ordena por DataHora (mais antigo primeiro). Padrão: true.
-    pub ordenar: Option<bool>,
+    /// `Option<String>` (não `Option<bool>`) para que um valor inválido vire um
+    /// 400 no envelope JSON, em vez de uma rejeição crua do extractor do axum.
+    pub ordenar: Option<String>,
+}
+
+/// Interpreta o parâmetro booleano `ordenar` de forma tolerante; valor fora do
+/// conjunto aceito vira `AppError::BadRequest` (400). Vazio/ausente -> default.
+fn parse_ordenar(s: &Option<String>) -> Result<bool, AppError> {
+    match s.as_deref().map(str::trim) {
+        None | Some("") => Ok(true),
+        Some("true") | Some("1") | Some("S") | Some("s") => Ok(true),
+        Some("false") | Some("0") | Some("N") | Some("n") => Ok(false),
+        Some(other) => Err(AppError::BadRequest(format!(
+            "valor inválido para 'ordenar': '{other}' (use true ou false)"
+        ))),
+    }
 }
 
 /// Recupera a linha do tempo de um processo, aplicando os filtros e a ordenação.
@@ -100,9 +115,11 @@ async fn fetch_andamentos(state: &AppState, q: &AndamentosQuery) -> Result<Value
         extra.push(("TarefasModulos", Param::Array(tarefas_modulos)));
     }
 
+    let ordenar = parse_ordenar(&q.ordenar)?;
+
     let mut dados = super::call_with(state, "listarAndamentos", true, extra).await?;
 
-    if q.ordenar.unwrap_or(true) {
+    if ordenar {
         if let Value::Array(arr) = &mut dados {
             ordenar_por_datahora(arr);
         }
@@ -151,7 +168,7 @@ pub async fn documentos_processo(
             andamentos: None,
             tarefas_modulos: None,
             sin_retornar_atributos: None,
-            ordenar: Some(true),
+            ordenar: None, // default: ordena por DataHora
         },
     )
     .await?;
@@ -195,7 +212,7 @@ pub async fn publicacoes_processo(
             andamentos: None,
             tarefas_modulos: None,
             sin_retornar_atributos: None,
-            ordenar: Some(true),
+            ordenar: None, // default: ordena por DataHora
         },
     )
     .await?;
@@ -217,7 +234,7 @@ pub async fn publicacoes_processo(
     // limitada (não martelar o SEI nem estourar o tempo em processos grandes).
     use futures::stream::StreamExt;
     let s_ref = &s;
-    let mut resultados: Vec<(usize, Option<Value>)> =
+    let resultados: Vec<Result<(usize, Option<Value>), AppError>> =
         futures::stream::iter(nums.into_iter().enumerate())
             .map(|(i, num)| async move {
                 let params = [
@@ -225,20 +242,31 @@ pub async fn publicacoes_processo(
                     ("SinRetornarAndamento", "N".to_string()),
                     ("SinRetornarAssinaturas", "N".to_string()),
                 ];
-                // documentos sem publicação retornam <parametros xsi:nil> -> null
                 match super::call(s_ref, "consultarPublicacao", true, &params).await {
+                    // documento com publicação
                     Ok(d) if !d.is_null() => {
-                        (i, Some(json!({ "documento": num, "publicacao": d })))
+                        Ok((i, Some(json!({ "documento": num, "publicacao": d }))))
                     }
-                    _ => (i, None),
+                    // documento sem publicação: <parametros xsi:nil> -> null
+                    Ok(_) => Ok((i, None)),
+                    // SOAP Fault: número heurístico inválido ou sem publicação -> ignora
+                    Err(AppError::SoapFault { .. }) => Ok((i, None)),
+                    // erro sistêmico (timeout, indisponível, http, parse) -> propaga,
+                    // para não mascarar uma falha geral como "sem publicações".
+                    Err(e) => Err(e),
                 }
             })
             .buffer_unordered(10)
             .collect()
             .await;
 
-    resultados.sort_by_key(|(i, _)| *i);
-    let itens: Vec<Value> = resultados.into_iter().filter_map(|(_, v)| v).collect();
+    // Aborta no primeiro erro sistêmico (devolve o AppError pelo envelope JSON).
+    let mut itens_idx: Vec<(usize, Option<Value>)> = Vec::with_capacity(resultados.len());
+    for r in resultados {
+        itens_idx.push(r?);
+    }
+    itens_idx.sort_by_key(|(i, _)| *i);
+    let itens: Vec<Value> = itens_idx.into_iter().filter_map(|(_, v)| v).collect();
     ok(Value::Array(itens))
 }
 
@@ -253,6 +281,17 @@ mod tests {
             Some("84230597".to_string())
         );
         assert_eq!(numero_documento("Conclusão do processo na unidade"), None);
+    }
+
+    #[test]
+    fn ordenar_aceita_validos_e_rejeita_invalido() {
+        assert!(parse_ordenar(&None).unwrap());
+        assert!(parse_ordenar(&Some("".into())).unwrap());
+        assert!(parse_ordenar(&Some("true".into())).unwrap());
+        assert!(!parse_ordenar(&Some("false".into())).unwrap());
+        assert!(!parse_ordenar(&Some("N".into())).unwrap());
+        let err = parse_ordenar(&Some("abc".into())).unwrap_err();
+        assert!(matches!(err, AppError::BadRequest(_)));
     }
 
     #[test]

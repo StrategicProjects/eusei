@@ -82,16 +82,22 @@ pub async fn procedimento_q(State(s): State<AppState>, Query(q): Query<ProcOneQu
 }
 
 /// Lote: `?protocolos=A,B,C`. Cada item recebe `{protocolo, dados|erro}`.
+/// `protocolos` é `Option<String>` (não `String`) para que a ausência caia no
+/// envelope JSON da API em vez de uma rejeição crua do extractor do axum.
 #[derive(Debug, Deserialize)]
 pub struct ProcsQuery {
-    pub protocolos: String,
+    pub protocolos: Option<String>,
     #[serde(flatten)]
     pub flags: ProcFlags,
 }
 
 pub async fn procedimentos(State(s): State<AppState>, Query(q): Query<ProcsQuery>) -> Resp {
+    let protocolos = q
+        .protocolos
+        .filter(|v| !v.trim().is_empty())
+        .ok_or_else(|| AppError::BadRequest("parâmetro obrigatório ausente: protocolos".into()))?;
     let mut itens = Vec::new();
-    for p in q.protocolos.split(',').map(|x| x.trim()).filter(|x| !x.is_empty()) {
+    for p in protocolos.split(',').map(|x| x.trim()).filter(|x| !x.is_empty()) {
         let params = proc_params(p.to_string(), &q.flags);
         match super::call(&s, "consultarProcedimento", true, &params).await {
             Ok(dados) => itens.push(json!({ "protocolo": p, "dados": dados, "erro": Value::Null })),
@@ -131,16 +137,21 @@ pub async fn documento(
 }
 
 /// Lote de documentos: `?protocolos=A,B,C`. Cada item: `{protocolo, dados|erro}`.
+/// `protocolos` é `Option<String>` (ver `ProcsQuery`) para validar no handler.
 #[derive(Debug, Deserialize)]
 pub struct DocsQuery {
-    pub protocolos: String,
+    pub protocolos: Option<String>,
     #[serde(flatten)]
     pub flags: DocFlags,
 }
 
 pub async fn documentos(State(s): State<AppState>, Query(q): Query<DocsQuery>) -> Resp {
+    let protocolos = q
+        .protocolos
+        .filter(|v| !v.trim().is_empty())
+        .ok_or_else(|| AppError::BadRequest("parâmetro obrigatório ausente: protocolos".into()))?;
     let mut itens = Vec::new();
-    for p in q.protocolos.split(',').map(|x| x.trim()).filter(|x| !x.is_empty()) {
+    for p in protocolos.split(',').map(|x| x.trim()).filter(|x| !x.is_empty()) {
         let params = doc_params(p.to_string(), &q.flags);
         match super::call(&s, "consultarDocumento", true, &params).await {
             Ok(dados) => itens.push(json!({ "protocolo": p, "dados": dados, "erro": Value::Null })),
