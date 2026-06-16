@@ -3,8 +3,18 @@
 //! systemd em produção). Espelha o `sei_config()` do pacote R `rsei`.
 
 use std::env;
+use std::fmt;
 
-#[derive(Clone, Debug)]
+/// Mascara um segredo para logs: mostra só o tamanho, nunca o valor.
+fn redigido(s: &str) -> String {
+    if s.is_empty() {
+        "\"\"".to_string()
+    } else {
+        format!("\"***\" ({} chars)", s.len())
+    }
+}
+
+#[derive(Clone)]
 pub struct AppConfig {
     /// Endereço de bind do servidor HTTP (ex.: "127.0.0.1:8088").
     pub bind: String,
@@ -18,7 +28,7 @@ pub struct AppConfig {
     pub log_filter: String,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct SeiConfig {
     pub url: String,
     pub sigla_sistema: String,
@@ -29,11 +39,47 @@ pub struct SeiConfig {
 
 /// Configuração do SIP (Sistema de Permissões) — endpoint e autenticação
 /// distintos do SEI. Opcional: requer chave de acesso própria do SIP.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct SipConfig {
     pub url: String,
     pub chave_acesso: String,
     pub id_sistema: String,
+}
+
+// `Debug` manual: nunca expõe tokens nem chaves de acesso (defesa contra
+// vazamento acidental em logs/dumps `{:?}`).
+impl fmt::Debug for AppConfig {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("AppConfig")
+            .field("bind", &self.bind)
+            .field("tokens", &format_args!("[{} token(s) ***]", self.tokens.len()))
+            .field("sei", &self.sei)
+            .field("sip", &self.sip)
+            .field("log_filter", &self.log_filter)
+            .finish()
+    }
+}
+
+impl fmt::Debug for SeiConfig {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("SeiConfig")
+            .field("url", &self.url)
+            .field("sigla_sistema", &self.sigla_sistema)
+            .field("identificacao_servico", &format_args!("{}", redigido(&self.identificacao_servico)))
+            .field("id_unidade", &self.id_unidade)
+            .field("timeout_secs", &self.timeout_secs)
+            .finish()
+    }
+}
+
+impl fmt::Debug for SipConfig {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("SipConfig")
+            .field("url", &self.url)
+            .field("chave_acesso", &format_args!("{}", redigido(&self.chave_acesso)))
+            .field("id_sistema", &self.id_sistema)
+            .finish()
+    }
 }
 
 impl SipConfig {
@@ -98,5 +144,38 @@ impl AppConfig {
             },
             log_filter: get("RUST_LOG", "eusei=info,tower_http=info"),
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn debug_nao_vaza_segredos() {
+        let cfg = AppConfig {
+            bind: "127.0.0.1:18088".into(),
+            tokens: vec!["super-secret-token".into()],
+            sei: SeiConfig {
+                url: "https://exemplo/ws".into(),
+                sigla_sistema: "SIGLA".into(),
+                identificacao_servico: "chave-sei-secreta".into(),
+                id_unidade: "10".into(),
+                timeout_secs: 60,
+            },
+            sip: SipConfig {
+                url: "https://exemplo/sip".into(),
+                chave_acesso: "chave-sip-secreta".into(),
+                id_sistema: "SIP".into(),
+            },
+            log_filter: "eusei=info".into(),
+        };
+        let dump = format!("{cfg:?}");
+        assert!(!dump.contains("super-secret-token"));
+        assert!(!dump.contains("chave-sei-secreta"));
+        assert!(!dump.contains("chave-sip-secreta"));
+        // metadados não-sensíveis seguem visíveis
+        assert!(dump.contains("127.0.0.1:18088"));
+        assert!(dump.contains("SIGLA"));
     }
 }

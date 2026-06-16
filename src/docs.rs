@@ -16,7 +16,13 @@ const INDEX_HTML: &str = include_str!("../static/index.html");
 const DOCS_HTML: &str = include_str!("../static/docs.html");
 const TAILWIND_CSS: &str = include_str!("../static/tailwind.css");
 
-const ASSET_CACHE: &str = "public, max-age=31536000, immutable";
+/// Fontes são versionadas de fato pelo conteúdo (nome fixo, bytes fixos): cache
+/// longo + `immutable`.
+const FONT_CACHE: &str = "public, max-age=31536000, immutable";
+/// O CSS é gerado e seu conteúdo muda entre deploys sem mudar o nome do arquivo.
+/// Sem `immutable` e com `must-revalidate` para o navegador não servir CSS
+/// velho por um ano após um deploy.
+const CSS_CACHE: &str = "public, max-age=3600, must-revalidate";
 
 pub async fn openapi() -> ([(header::HeaderName, &'static str); 1], &'static str) {
     (
@@ -29,7 +35,7 @@ pub async fn tailwind() -> ([(header::HeaderName, &'static str); 2], &'static st
     (
         [
             (header::CONTENT_TYPE, "text/css; charset=utf-8"),
-            (header::CACHE_CONTROL, ASSET_CACHE),
+            (header::CACHE_CONTROL, CSS_CACHE),
         ],
         TAILWIND_CSS,
     )
@@ -39,7 +45,7 @@ pub async fn font_fraunces() -> ([(header::HeaderName, &'static str); 2], Bytes)
     (
         [
             (header::CONTENT_TYPE, "font/woff2"),
-            (header::CACHE_CONTROL, ASSET_CACHE),
+            (header::CACHE_CONTROL, FONT_CACHE),
         ],
         Bytes::from_static(FRAUNCES),
     )
@@ -49,7 +55,7 @@ pub async fn font_spline() -> ([(header::HeaderName, &'static str); 2], Bytes) {
     (
         [
             (header::CONTENT_TYPE, "font/woff2"),
-            (header::CACHE_CONTROL, ASSET_CACHE),
+            (header::CACHE_CONTROL, FONT_CACHE),
         ],
         Bytes::from_static(SPLINE),
     )
