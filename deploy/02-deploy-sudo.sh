@@ -53,7 +53,11 @@ install -m 0755 "$BIN_SRC" /opt/eusei/eusei
 echo "  + binário instalado em /opt/eusei/eusei"
 
 # --- 3. /etc/eusei.env -----------------------------------------------------
+# A chave de acesso do SEI (SEI_IDENTIFICACAO_SERVICO) NÃO é versionada nem
+# gerável: deve ser preenchida pelo operador. Por isso o env é criado com ela
+# vazia e o serviço só é (re)iniciado quando a config está completa.
 GEN_TOKEN=""
+CONFIG_INCOMPLETA=0
 if [[ ! -f /etc/eusei.env ]]; then
   # Gera um token aleatório no install (sem janela de credencial padrão).
   GEN_TOKEN="$(head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | cut -c1-43)"
@@ -62,7 +66,8 @@ EUSEI_BIND=127.0.0.1:18088
 EUSEI_TOKENS=${GEN_TOKEN}
 SEI_URL=https://sei.pe.gov.br/sei/ws/SeiWS.php
 SEI_SIGLA_SISTEMA=HORTENSIAS
-SEI_IDENTIFICACAO_SERVICO=publicacao
+# Obrigatório: identificação/chave de acesso do serviço no SEI (preencha antes de iniciar)
+SEI_IDENTIFICACAO_SERVICO=
 SEI_ID_UNIDADE=
 SEI_TIMEOUT_SECS=60
 RUST_LOG=eusei=info,tower_http=warn
@@ -74,12 +79,22 @@ else
   echo "  = /etc/eusei.env já existe (mantido)"
 fi
 
+# A chave de acesso está realmente preenchida? (linha não-comentada e não-vazia)
+if ! grep -qE '^[[:space:]]*SEI_IDENTIFICACAO_SERVICO=[^[:space:]]+' /etc/eusei.env; then
+  CONFIG_INCOMPLETA=1
+fi
+
 # --- 4. systemd ------------------------------------------------------------
 install -m 0644 "$UNIT_SRC" /etc/systemd/system/eusei.service
 systemctl daemon-reload
 systemctl enable eusei >/dev/null 2>&1 || true
-systemctl restart eusei
-echo "  + serviço systemd 'eusei' ativo"
+if [[ "$CONFIG_INCOMPLETA" -eq 1 ]]; then
+  echo "  ! SEI_IDENTIFICACAO_SERVICO ainda não definido em /etc/eusei.env."
+  echo "    serviço habilitado mas NÃO iniciado — preencha a chave e rode: systemctl start eusei"
+else
+  systemctl restart eusei
+  echo "  + serviço systemd 'eusei' ativo"
+fi
 
 # --- 5. nginx --------------------------------------------------------------
 install -d -m 0755 /etc/nginx/snippets
