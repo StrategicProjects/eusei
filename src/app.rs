@@ -342,6 +342,28 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn cache_control_reflete_ttl_da_operacao() {
+        let (url, _c) = mock_sei_contado().await;
+        let app = build_app(state_com(url, sip_off()));
+        let req = Request::builder()
+            .uri("/v1/paises")
+            .header("Authorization", format!("Bearer {TOKEN}"))
+            .body(Body::empty())
+            .unwrap();
+        let r = app.oneshot(req).await.unwrap();
+        assert_eq!(r.status(), StatusCode::OK);
+        let cc = r
+            .headers()
+            .get(axum::http::header::CACHE_CONTROL)
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("");
+        // listarPaises é classe estática -> ttl_estatico (3600 no cfg de teste)
+        assert!(cc.contains("private"), "deve ser private; veio: {cc}");
+        assert!(cc.contains("max-age=3600"), "max-age deve refletir o TTL; veio: {cc}");
+        assert!(r.headers().get(axum::http::header::AGE).is_some(), "deve ter Age");
+    }
+
+    #[tokio::test]
     async fn cache_bypass_com_no_cache_revalida() {
         use std::sync::atomic::Ordering;
         let (url, count) = mock_sei_contado().await;
