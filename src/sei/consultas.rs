@@ -15,6 +15,38 @@ fn ok(dados: Value) -> Resp {
     Ok(Json(json!({ "ok": true, "dados": dados })))
 }
 
+/// Deriva o estado de conclusão do processo a partir de `UnidadesProcedimentoAberto`
+/// (unidades onde ainda está aberto). Mantém os nomes originais do SEI em `dados`
+/// e expõe o derivado como campo irmão.
+/// - `true`  — sem unidades abertas (campo nulo) ⇒ concluído em todas as unidades;
+/// - `false` — há unidade(s) aberta(s);
+/// - `null`  — indeterminado, quando `solicitadas == false` (o cliente passou
+///   `sin_retornar_unidades_procedimento_aberto=N`). É necessário receber a flag
+///   pois o SEI devolve o campo como `nil` mesmo quando não foi pedido — sem a
+///   flag, "não pedido" seria indistinguível de "concluído".
+fn concluido(dados: &Value, solicitadas: bool) -> Value {
+    if !solicitadas {
+        return Value::Null;
+    }
+    match dados.get("UnidadesProcedimentoAberto") {
+        None => Value::Null,                       // pedido mas ausente -> desconhecido
+        Some(Value::Null) => Value::Bool(true),    // nil -> nenhuma unidade aberta
+        Some(Value::Array(a)) => Value::Bool(a.is_empty()),
+        Some(_) => Value::Bool(false),             // objeto único -> 1 unidade aberta
+    }
+}
+
+/// `true` se o handler pediu ao SEI as unidades em aberto (default `S`).
+fn unidades_solicitadas(f: &ProcFlags) -> Result<bool, AppError> {
+    Ok(sn(&f.sin_retornar_unidades_procedimento_aberto)? == "S")
+}
+
+/// Envelope de resposta de consulta de processo: `dados` + `concluido` derivado.
+fn ok_proc(dados: Value, solicitadas: bool) -> Resp {
+    let concl = concluido(&dados, solicitadas);
+    Ok(Json(json!({ "ok": true, "dados": dados, "concluido": concl })))
+}
+
 /// Resolve um sinalizador "S"/"N" (default "S"); valor fora de S/N → 400.
 fn sn(opt: &Option<String>) -> Result<String, AppError> {
     super::flag_sn(opt, true)
@@ -55,8 +87,10 @@ pub async fn procedimento(
     Path(protocolo): Path<String>,
     Query(f): Query<ProcFlags>,
 ) -> Resp {
-    let dados = super::call(&s, "consultarProcedimento", true, &proc_params(protocolo, &f)?).await?;
-    ok(dados)
+    let params = proc_params(protocolo, &f)?;
+    let solic = unidades_solicitadas(&f)?;
+    let dados = super::call(&s, "consultarProcedimento", true, &params).await?;
+    ok_proc(dados, solic)
 }
 
 /// Variante por query string: `/v1/procedimento?protocolo=...`. Preferida atrás
@@ -74,8 +108,10 @@ pub async fn procedimento_q(State(s): State<AppState>, Query(q): Query<ProcOneQu
         .protocolo
         .filter(|v| !v.is_empty())
         .ok_or_else(|| AppError::BadRequest("parâmetro obrigatório ausente: protocolo".into()))?;
-    let dados = super::call(&s, "consultarProcedimento", true, &proc_params(protocolo, &q.flags)?).await?;
-    ok(dados)
+    let params = proc_params(protocolo, &q.flags)?;
+    let solic = unidades_solicitadas(&q.flags)?;
+    let dados = super::call(&s, "consultarProcedimento", true, &params).await?;
+    ok_proc(dados, solic)
 }
 
 /// Lote: `?protocolos=A,B,C`. Cada item recebe `{protocolo, dados|erro}`.
@@ -93,12 +129,18 @@ pub async fn procedimentos(State(s): State<AppState>, Query(q): Query<ProcsQuery
         .protocolos
         .filter(|v| !v.trim().is_empty())
         .ok_or_else(|| AppError::BadRequest("parâmetro obrigatório ausente: protocolos".into()))?;
+    let solic = unidades_solicitadas(&q.flags)?;
     let mut itens = Vec::new();
     for p in protocolos.split(',').map(|x| x.trim()).filter(|x| !x.is_empty()) {
         let params = proc_params(p.to_string(), &q.flags)?;
         match super::call(&s, "consultarProcedimento", true, &params).await {
-            Ok(dados) => itens.push(json!({ "protocolo": p, "dados": dados, "erro": Value::Null })),
-            Err(e) => itens.push(json!({ "protocolo": p, "dados": Value::Null, "erro": e.to_string() })),
+            Ok(dados) => {
+                let concl = concluido(&dados, solic);
+                itens.push(json!({ "protocolo": p, "dados": dados, "concluido": concl, "erro": Value::Null }));
+            }
+            Err(e) => itens.push(
+                json!({ "protocolo": p, "dados": Value::Null, "concluido": Value::Null, "erro": e.to_string() }),
+            ),
         }
     }
     Ok(Json(json!({ "ok": true, "itens": itens })))
@@ -272,4 +314,32 @@ pub async fn procedimento_individual(
     ];
     let dados = super::call(&s, "consultarProcedimentoIndividual", true, &extra).await?;
     ok(dados)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::concluido;
+    use serde_json::{json, Value};
+
+    #[test]
+    fn concluido_derivado_de_unidades_abertas() {
+        // (solicitadas = true) sem unidades abertas (nil) -> concluído
+        assert_eq!(concluido(&json!({ "UnidadesProcedimentoAberto": null }), true), json!(true));
+        // lista vazia -> concluído
+        assert_eq!(concluido(&json!({ "UnidadesProcedimentoAberto": [] }), true), json!(true));
+        // unidade(s) aberta(s) -> não concluído
+        assert_eq!(
+            concluido(&json!({ "UnidadesProcedimentoAberto": [{ "IdUnidade": "1" }] }), true),
+            json!(false)
+        );
+        // objeto único (uma unidade) -> não concluído
+        assert_eq!(
+            concluido(&json!({ "UnidadesProcedimentoAberto": { "IdUnidade": "1" } }), true),
+            json!(false)
+        );
+        // campo ausente -> desconhecido
+        assert_eq!(concluido(&json!({ "ProcedimentoFormatado": "x" }), true), Value::Null);
+        // não solicitado (flag N) -> indeterminado, mesmo com o SEI devolvendo nil
+        assert_eq!(concluido(&json!({ "UnidadesProcedimentoAberto": null }), false), Value::Null);
+    }
 }

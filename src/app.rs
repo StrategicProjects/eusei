@@ -395,6 +395,20 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn procedimento_inclui_concluido_derivado() {
+        // #31: a resposta de /v1/procedimento traz o campo derivado `concluido`.
+        // O mock não retorna UnidadesProcedimentoAberto -> concluido indeterminado.
+        let url = mock_sei().await;
+        let app = build_app(state_com(url, sip_off()));
+        let (status, body) = get(app, "/v1/procedimento?protocolo=0001", Some(TOKEN)).await;
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(body["ok"], true);
+        assert_eq!(body["dados"]["ProcedimentoFormatado"], "0001/2022");
+        assert!(body.as_object().unwrap().contains_key("concluido"), "deve emitir 'concluido'");
+        assert!(body["concluido"].is_null(), "sem unidades -> indeterminado");
+    }
+
+    #[tokio::test]
     async fn sip_nao_configurado_400() {
         let app = build_app(state_com("http://nao-usado/".into(), sip_off()));
         let (status, body) = get(app, "/v1/permissao", Some(TOKEN)).await;
