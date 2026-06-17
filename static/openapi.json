@@ -35,6 +35,7 @@
       "get": {
         "tags": ["consultas"],
         "summary": "Consulta um processo",
+        "description": "Além de `dados` (campos originais do SEI: `ProcedimentosRelacionados`, `ProcedimentosAnexados`, `UnidadesProcedimentoAberto`, `AndamentoConclusao` etc.), a resposta inclui o campo derivado **`concluido`**: `true` se não há unidades com o processo aberto, `false` se há, `null` se indeterminado (quando `sin_retornar_unidades_procedimento_aberto=N`).",
         "parameters": [
           { "$ref": "#/components/parameters/Protocolo" },
           { "name": "sin_retornar_assuntos", "in": "query", "schema": { "$ref": "#/components/schemas/SinFlag" } },
