@@ -154,14 +154,16 @@ impl SeiCache {
             return init.await;
         }
 
-        // Bypass (Cache-Control: no-cache): busca fresco e atualiza os caches; em
-        // erro, propaga (respeita o pedido explícito do cliente por dado fresco).
-        if ctx_bypass() {
+        // Bypass: busca fresco; em erro, propaga (respeita o pedido por dado
+        // fresco). `no-cache` ainda atualiza os caches; `no-store` NÃO persiste.
+        let modo = ctx_bypass();
+        if modo != Bypass::Off {
             let v = init.await?;
-            let entry = CacheEntry::ok(v, ttl);
-            self.store(&key, &entry).await;
+            if modo == Bypass::NoCache {
+                self.store(&key, &CacheEntry::ok(v.clone(), ttl)).await;
+            }
             self.note(Hit::Miss, ttl, Duration::ZERO);
-            return Ok(entry.value_clone());
+            return Ok(v);
         }
 
         // O init mapeia o resultado: resposta boa -> entrada `Ok`; SOAP Fault ->
@@ -296,14 +298,6 @@ impl CacheEntry {
     fn idade(&self) -> Duration {
         Instant::now().saturating_duration_since(self.created)
     }
-
-    /// Clona o JSON de uma entrada `Ok` (usado no caminho de bypass, sempre `Ok`).
-    fn value_clone(&self) -> Value {
-        match &self.payload {
-            Payload::Ok(v) => (**v).clone(),
-            Payload::Fault { .. } => Value::Null,
-        }
-    }
 }
 
 /// Chave de cache para uma operação do SEI. Inclui só parâmetros não-secretos
@@ -354,8 +348,19 @@ impl Default for ReqStats {
     }
 }
 
+/// Diretiva de cache da requisição (do header `Cache-Control`).
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Bypass {
+    /// Sem bypass: usa o cache normalmente.
+    Off,
+    /// `no-cache`: busca fresco e **atualiza** o cache.
+    NoCache,
+    /// `no-store`: busca fresco e **não persiste** (dados não vão p/ fresh/stale).
+    NoStore,
+}
+
 struct ReqCtx {
-    bypass: bool,
+    bypass: Bypass,
     stats: Arc<ReqStats>,
 }
 
@@ -363,20 +368,20 @@ tokio::task_local! {
     static REQ: ReqCtx;
 }
 
-fn ctx_bypass() -> bool {
-    REQ.try_with(|c| c.bypass).unwrap_or(false)
+fn ctx_bypass() -> Bypass {
+    REQ.try_with(|c| c.bypass).unwrap_or(Bypass::Off)
 }
 
-/// Lê o flag de bypass do contexto de cache da requisição atual (false se fora
-/// de escopo). Para capturar antes de `tokio::spawn` e repassar via [`com_bypass`].
-pub fn bypass_atual() -> bool {
+/// Lê a diretiva de cache da requisição atual (`Off` se fora de escopo). Para
+/// capturar antes de `tokio::spawn` e repassar via [`com_bypass`].
+pub(crate) fn bypass_atual() -> Bypass {
     ctx_bypass()
 }
 
-/// Executa `fut` dentro de um contexto de cache com o `bypass` dado. Necessário
-/// para repassar o bypass a uma task spawnada — o task-local não cruza
+/// Executa `fut` dentro de um contexto de cache com a diretiva dada. Necessário
+/// para repassar o contexto a uma task spawnada — o task-local não cruza
 /// `tokio::spawn` (usado pelo endpoint SSE de andamentos).
-pub async fn com_bypass<F>(bypass: bool, fut: F) -> F::Output
+pub(crate) async fn com_bypass<F>(bypass: Bypass, fut: F) -> F::Output
 where
     F: std::future::Future,
 {
@@ -404,9 +409,16 @@ pub async fn middleware(
         .and_then(|v| v.to_str().ok())
         .map(|s| {
             let s = s.to_ascii_lowercase();
-            s.contains("no-cache") || s.contains("no-store")
+            // no-store é mais estrito que no-cache: tem prioridade.
+            if s.contains("no-store") {
+                Bypass::NoStore
+            } else if s.contains("no-cache") {
+                Bypass::NoCache
+            } else {
+                Bypass::Off
+            }
         })
-        .unwrap_or(false);
+        .unwrap_or(Bypass::Off);
 
     let stats = Arc::new(ReqStats::default());
     let ctx = ReqCtx {

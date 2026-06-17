@@ -450,6 +450,30 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn cache_no_store_nao_persiste() {
+        // no-store busca fresco e NÃO persiste: a requisição normal seguinte é MISS.
+        use std::sync::atomic::Ordering;
+        let (url, count) = mock_sei_contado().await;
+        let app = build_app(state_com(url, sip_off()));
+        let pedir = |cc: Option<&'static str>| {
+            let mut b = Request::builder()
+                .uri("/v1/paises")
+                .header("Authorization", format!("Bearer {TOKEN}"));
+            if let Some(v) = cc {
+                b = b.header("Cache-Control", v);
+            }
+            b.body(Body::empty()).unwrap()
+        };
+        let r1 = app.clone().oneshot(pedir(Some("no-store"))).await.unwrap();
+        assert_eq!(r1.status(), StatusCode::OK);
+        assert_eq!(count.load(Ordering::SeqCst), 1);
+        // sem persistência: a 2ª (normal) volta ao SEI (MISS), não HIT
+        let r2 = app.clone().oneshot(pedir(None)).await.unwrap();
+        assert_eq!(r2.headers().get("x-cache").and_then(|v| v.to_str().ok()), Some("MISS"));
+        assert_eq!(count.load(Ordering::SeqCst), 2, "no-store não deve ter populado o cache");
+    }
+
+    #[tokio::test]
     async fn cache_bypass_com_no_cache_revalida() {
         use std::sync::atomic::Ordering;
         let (url, count) = mock_sei_contado().await;

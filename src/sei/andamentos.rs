@@ -404,11 +404,17 @@ pub async fn andamentos_stream(
 /// autorização como "sem publicações".
 fn fault_sem_publicacao(faultstring: &str) -> bool {
     let s = faultstring.to_lowercase();
-    s.contains("não encontrad")
-        || s.contains("nao encontrad")
-        || s.contains("sem publica")
-        || s.contains("possui publica") // "não possui publicação"
-        || s.contains("nenhuma publica")
+    let nao_encontrado = s.contains("não encontrad") || s.contains("nao encontrad");
+    // "documento ... não encontrado" é benigno; "serviço/método não encontrado"
+    // indica autorização/configuração e NÃO deve ser silenciado.
+    let doc_nao_encontrado = nao_encontrado && s.contains("documento");
+    let sem_publicacao = s.contains("publica")
+        && (s.contains("sem ")
+            || s.contains("não possui")
+            || s.contains("nao possui")
+            || s.contains("nenhuma")
+            || nao_encontrado);
+    doc_nao_encontrado || sem_publicacao
 }
 
 /// Extrai o primeiro número (>= 6 dígitos) que segue a palavra "documento".
@@ -571,10 +577,13 @@ mod tests {
         assert!(fault_sem_publicacao("Documento 84230597 não encontrado."));
         assert!(fault_sem_publicacao("Documento não possui publicação."));
         assert!(fault_sem_publicacao("Nenhuma publicação localizada."));
-        // acesso/serviço (propagar)
+        // acesso/serviço/configuração (propagar)
         assert!(!fault_sem_publicacao("Usuário não tem acesso ao serviço."));
         assert!(!fault_sem_publicacao("Serviço não disponível."));
         assert!(!fault_sem_publicacao("Acesso negado."));
+        // "serviço/método não encontrado" NÃO é benigno (config/autorização)
+        assert!(!fault_sem_publicacao("Serviço não encontrado."));
+        assert!(!fault_sem_publicacao("Método não encontrado."));
     }
 
     #[test]
