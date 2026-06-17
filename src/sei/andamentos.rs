@@ -394,6 +394,20 @@ pub async fn andamentos_stream(
 
 // --- Documentos/publicações derivados da timeline ------------------------------
 
+/// Classifica um SOAP Fault do `consultarPublicacao` como "benigno" — documento
+/// inexistente (número heurístico inválido) ou documento sem publicação. Só esses
+/// são ignorados; faults de acesso/serviço (ex.: "não tem acesso", "serviço não
+/// disponível") NÃO casam aqui e são propagados, para não mascarar falta de
+/// autorização como "sem publicações".
+fn fault_sem_publicacao(faultstring: &str) -> bool {
+    let s = faultstring.to_lowercase();
+    s.contains("não encontrad")
+        || s.contains("nao encontrad")
+        || s.contains("sem publica")
+        || s.contains("possui publica") // "não possui publicação"
+        || s.contains("nenhuma publica")
+}
+
 /// Extrai o primeiro número (>= 6 dígitos) que segue a palavra "documento".
 fn numero_documento(descricao: &str) -> Option<String> {
     let lower = descricao.to_lowercase();
@@ -510,10 +524,14 @@ pub async fn publicacoes_processo(
                     }
                     // documento sem publicação: <parametros xsi:nil> -> null
                     Ok(_) => Ok((i, None)),
-                    // SOAP Fault: número heurístico inválido ou sem publicação -> ignora
-                    Err(AppError::SoapFault { .. }) => Ok((i, None)),
-                    // erro sistêmico (timeout, indisponível, http, parse) -> propaga,
-                    // para não mascarar uma falha geral como "sem publicações".
+                    // SOAP Fault benigno (documento inexistente / sem publicação):
+                    // número heurístico inválido ou doc sem publicação -> ignora.
+                    Err(AppError::SoapFault { string, .. }) if fault_sem_publicacao(&string) => {
+                        Ok((i, None))
+                    }
+                    // demais erros (acesso negado, serviço indisponível, sistêmicos)
+                    // -> propaga, para não mascarar falta de autorização/falha geral
+                    // como "sem publicações".
                     Err(e) => Err(e),
                 }
             })
@@ -542,6 +560,18 @@ mod tests {
             Some("84230597".to_string())
         );
         assert_eq!(numero_documento("Conclusão do processo na unidade"), None);
+    }
+
+    #[test]
+    fn fault_sem_publicacao_so_ignora_benignos() {
+        // benignos (ignorar)
+        assert!(fault_sem_publicacao("Documento 84230597 não encontrado."));
+        assert!(fault_sem_publicacao("Documento não possui publicação."));
+        assert!(fault_sem_publicacao("Nenhuma publicação localizada."));
+        // acesso/serviço (propagar)
+        assert!(!fault_sem_publicacao("Usuário não tem acesso ao serviço."));
+        assert!(!fault_sem_publicacao("Serviço não disponível."));
+        assert!(!fault_sem_publicacao("Acesso negado."));
     }
 
     #[test]

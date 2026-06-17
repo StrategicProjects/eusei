@@ -30,12 +30,15 @@ pub async fn require_bearer(
     req: Request,
     next: Next,
 ) -> Result<Response, AppError> {
+    // O nome do esquema HTTP é case-insensitive (RFC 7235): aceita "Bearer",
+    // "bearer", etc. O valor do token segue case-sensitive.
     let token = req
         .headers()
         .get(header::AUTHORIZATION)
         .and_then(|v| v.to_str().ok())
-        .and_then(|s| s.strip_prefix("Bearer "))
-        .map(str::trim);
+        .and_then(|s| s.split_once(' '))
+        .filter(|(scheme, _)| scheme.eq_ignore_ascii_case("bearer"))
+        .map(|(_, rest)| rest.trim());
 
     match token {
         Some(t) if token_valido(&state.cfg.tokens, t) => Ok(next.run(req).await),
