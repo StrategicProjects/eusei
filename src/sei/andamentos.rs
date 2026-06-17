@@ -239,6 +239,8 @@ async fn fetch_andamentos(state: &AppState, q: &AndamentosQuery) -> Result<(Valu
     let mut registros: Vec<Value> = Vec::new();
     let mut lotes_com_dados = 0usize;
     let mut parciais = false;
+    let mut falhas = 0usize;
+    let mut ultimo_erro: Option<AppError> = None;
     for r in resultados {
         match r {
             Ok(v) => {
@@ -251,8 +253,19 @@ async fn fetch_andamentos(state: &AppState, q: &AndamentosQuery) -> Result<(Valu
             // entrada inválida (protocolo inexistente etc.) -> propaga p/ a requisição
             Err(e @ AppError::SoapFault { .. }) => return Err(e),
             // falha sistêmica pontual -> resultado parcial, não derruba tudo
-            Err(_) => parciais = true,
+            Err(e) => {
+                parciais = true;
+                falhas += 1;
+                ultimo_erro = Some(e);
+            }
         }
+    }
+
+    // Se TODOS os lotes falharam sistemicamente, não há resultado: propaga o erro
+    // em vez de devolver uma timeline vazia (que seria indistinguível de "sem
+    // andamentos"). Com ao menos um lote bom, segue o resultado parcial.
+    if falhas == n_lotes {
+        return Err(ultimo_erro.unwrap_or(AppError::SeiUnavailable));
     }
 
     dedup_por_id(&mut registros);
@@ -305,6 +318,8 @@ async fn stream_lotes(
     let mut feitos = 0usize;
     let mut lotes_com_dados = 0usize;
     let mut parciais = false;
+    let mut falhas = 0usize;
+    let mut ultimo_erro: Option<String> = None;
 
     while let Some(r) = stream.next().await {
         feitos += 1;
@@ -322,7 +337,11 @@ async fn stream_lotes(
                     .await;
                 return;
             }
-            Err(_) => parciais = true,
+            Err(e) => {
+                parciais = true;
+                falhas += 1;
+                ultimo_erro = Some(e.to_string());
+            }
         }
         let _ = tx
             .send(Ok(evento(
@@ -335,6 +354,15 @@ async fn stream_lotes(
                 }),
             )))
             .await;
+    }
+
+    // Todos os lotes falharam sistemicamente -> erro (não um `concluido` vazio).
+    if falhas == n_lotes {
+        let msg = ultimo_erro.unwrap_or_else(|| "SEI indisponível".to_string());
+        let _ = tx
+            .send(Ok(evento("erro", json!({ "ok": false, "erro": msg }))))
+            .await;
+        return;
     }
 
     dedup_por_id(&mut registros);

@@ -130,6 +130,25 @@ mod tests {
         (format!("http://{addr}/"), count)
     }
 
+    /// Mock do SEI que responde sempre HTTP 500 (falha sistêmica, sem SOAP Fault).
+    async fn mock_sei_500() -> String {
+        let app = Router::new().route(
+            "/",
+            axum::routing::post(|| async {
+                axum::response::Response::builder()
+                    .status(StatusCode::INTERNAL_SERVER_ERROR)
+                    .body(Body::from("erro interno do SEI".to_string()))
+                    .unwrap()
+            }),
+        );
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        tokio::spawn(async move {
+            axum::serve(listener, app).await.unwrap();
+        });
+        format!("http://{addr}/")
+    }
+
     fn cache_cfg() -> crate::config::CacheConfig {
         crate::config::CacheConfig {
             enabled: true,
@@ -268,6 +287,18 @@ mod tests {
         let url = mock_sei().await;
         let app = build_app(state_com(url, sip_off()));
         let (status, body) = get(app, "/v1/publicacoes-processo?protocolo=0001", Some(TOKEN)).await;
+        assert_eq!(status, StatusCode::BAD_GATEWAY);
+        assert_eq!(body["ok"], false);
+        assert_eq!(body["codigo"], "sei_erro_http");
+    }
+
+    #[tokio::test]
+    async fn andamentos_falha_total_dos_lotes_retorna_erro() {
+        // #35: se todos os lotes falham sistemicamente (HTTP 500), a resposta deve
+        // ser erro (502), não 200 com dados vazios.
+        let url = mock_sei_500().await;
+        let app = build_app(state_com(url, sip_off()));
+        let (status, body) = get(app, "/v1/andamentos?protocolo=0001&tarefas=1", Some(TOKEN)).await;
         assert_eq!(status, StatusCode::BAD_GATEWAY);
         assert_eq!(body["ok"], false);
         assert_eq!(body["codigo"], "sei_erro_http");
