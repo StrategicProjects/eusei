@@ -35,6 +35,12 @@ pub struct SeiConfig {
     pub identificacao_servico: String,
     pub id_unidade: String,
     pub timeout_secs: u64,
+    /// Quantas tarefas por chamada `listarAndamentos` ao fatiar a linha do tempo
+    /// completa (processos grandes). Menor = cada chamada mais leve/rápida.
+    pub andamentos_lote: usize,
+    /// Quantos lotes de andamentos consultar em paralelo. Menor = menos pressão
+    /// concorrente sobre o SEI (lotes batem menos no timeout do gateway dele).
+    pub andamentos_conc: usize,
 }
 
 /// Configuração do SIP (Sistema de Permissões) — endpoint e autenticação
@@ -68,6 +74,8 @@ impl fmt::Debug for SeiConfig {
             .field("identificacao_servico", &format_args!("{}", redigido(&self.identificacao_servico)))
             .field("id_unidade", &self.id_unidade)
             .field("timeout_secs", &self.timeout_secs)
+            .field("andamentos_lote", &self.andamentos_lote)
+            .field("andamentos_conc", &self.andamentos_conc)
             .finish()
     }
 }
@@ -124,6 +132,17 @@ impl AppConfig {
             .parse::<u64>()
             .map_err(|_| "SEI_TIMEOUT_SECS inválido (esperado inteiro).".to_string())?;
 
+        let andamentos_lote = get("SEI_ANDAMENTOS_LOTE", "8")
+            .parse::<usize>()
+            .ok()
+            .filter(|n| *n > 0)
+            .ok_or("SEI_ANDAMENTOS_LOTE inválido (esperado inteiro > 0).".to_string())?;
+        let andamentos_conc = get("SEI_ANDAMENTOS_CONC", "3")
+            .parse::<usize>()
+            .ok()
+            .filter(|n| *n > 0)
+            .ok_or("SEI_ANDAMENTOS_CONC inválido (esperado inteiro > 0).".to_string())?;
+
         Ok(AppConfig {
             bind: get("EUSEI_BIND", "127.0.0.1:18088"),
             tokens,
@@ -133,6 +152,8 @@ impl AppConfig {
                 identificacao_servico,
                 id_unidade: get("SEI_ID_UNIDADE", ""),
                 timeout_secs,
+                andamentos_lote,
+                andamentos_conc,
             },
             sip: SipConfig {
                 url: get(
@@ -162,6 +183,8 @@ mod tests {
                 identificacao_servico: "chave-sei-secreta".into(),
                 id_unidade: "10".into(),
                 timeout_secs: 60,
+                andamentos_lote: 10,
+                andamentos_conc: 4,
             },
             sip: SipConfig {
                 url: "https://exemplo/sip".into(),

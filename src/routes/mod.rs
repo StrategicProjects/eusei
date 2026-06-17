@@ -21,6 +21,8 @@ pub fn router() -> Router<AppState> {
         .route("/bloco/{id}", get(consultas::bloco))
         // andamentos (linha do tempo) e documentos/publicações do processo
         .route("/andamentos", get(andamentos::andamentos))
+        // mesma consulta, via SSE (progresso lote a lote -> cliente acompanha)
+        .route("/andamentos/stream", get(andamentos::andamentos_stream))
         .route("/documentos-processo", get(andamentos::documentos_processo))
         .route("/publicacoes-processo", get(andamentos::publicacoes_processo))
         // SIP (Sistema de Permissões) — requer SEI_SIP_*

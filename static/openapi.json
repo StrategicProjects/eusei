@@ -127,7 +127,7 @@
       "get": {
         "tags": ["andamentos"],
         "summary": "Linha do tempo (andamentos) de um processo",
-        "description": "Sem filtros, usa as tarefas 1..200 (linha do tempo completa) e ordena por data/hora.",
+        "description": "Sem filtros, usa as tarefas 1..200 (linha do tempo completa) e ordena por data/hora.\n\n**Processos grandes:** a consulta é fatiada em lotes de tarefas, executados em paralelo e mesclados (deduplicados por `IdAndamento`, ordenados por data/hora) — evita o HTTP 504 do gateway do SEI em processos enormes. A resposta inclui um bloco `resumo` (`lotes`, `lotes_com_dados`, `registros`, `parciais`); `parciais: true` indica que algum lote falhou e a linha do tempo pode estar incompleta. Para acompanhar o avanço ao vivo, use `/v1/andamentos/stream` (SSE).",
         "parameters": [
           { "$ref": "#/components/parameters/Protocolo" },
           { "name": "tarefas", "in": "query", "description": "IDs de tarefa separados por vírgula", "schema": { "type": "string" } },
@@ -137,6 +137,26 @@
           { "name": "ordenar", "in": "query", "schema": { "type": "boolean", "default": true } }
         ],
         "responses": { "200": { "$ref": "#/components/responses/Dados" }, "400": { "$ref": "#/components/responses/Erro" }, "401": { "$ref": "#/components/responses/Erro" } }
+      }
+    },
+    "/v1/andamentos/stream": {
+      "get": {
+        "tags": ["andamentos"],
+        "summary": "Linha do tempo via SSE (progresso ao vivo)",
+        "description": "Mesma consulta de `/v1/andamentos`, porém em `text/event-stream`. Emite um evento `progresso` a cada lote concluído (`lotes_concluidos`, `total_lotes`, `registros_ate_agora`, `parciais`) e, ao final, um evento `concluido` com `{ ok, dados, resumo }`. Um SOAP Fault encerra com um evento `erro`. Útil para exibir uma barra de progresso ao usuário em processos grandes.",
+        "parameters": [
+          { "$ref": "#/components/parameters/Protocolo" },
+          { "name": "tarefas", "in": "query", "description": "IDs de tarefa separados por vírgula", "schema": { "type": "string" } },
+          { "name": "andamentos", "in": "query", "description": "IDs de andamento separados por vírgula", "schema": { "type": "string" } },
+          { "name": "tarefas_modulos", "in": "query", "schema": { "type": "string" } },
+          { "name": "sin_retornar_atributos", "in": "query", "schema": { "$ref": "#/components/schemas/SinFlag" } },
+          { "name": "ordenar", "in": "query", "schema": { "type": "boolean", "default": true } }
+        ],
+        "responses": {
+          "200": { "description": "Stream SSE de eventos `progresso`/`concluido`/`erro`.", "content": { "text/event-stream": { "schema": { "type": "string" } } } },
+          "400": { "$ref": "#/components/responses/Erro" },
+          "401": { "$ref": "#/components/responses/Erro" }
+        }
       }
     },
     "/v1/documentos-processo": {
