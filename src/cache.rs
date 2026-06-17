@@ -30,21 +30,30 @@ use crate::config::CacheConfig;
 use crate::error::AppError;
 use crate::soap::envelope::Param;
 
-/// Valor guardado no cache. O JSON vai em `Arc` para que os caches `fresh` e
-/// `stale` compartilhem a mesma alocação.
+/// Conteúdo de uma entrada de cache: uma resposta boa ou um SOAP Fault lembrado
+/// (negative caching). O JSON bom vai em `Arc` para que `fresh` e `stale`
+/// compartilhem a mesma alocação.
 #[derive(Clone)]
-pub struct CacheValue {
-    value: Arc<Value>,
+enum Payload {
+    Ok(Arc<Value>),
+    Fault { code: String, string: String },
+}
+
+/// Entrada do cache: conteúdo + TTL próprio (frescor ou negative) + idade + peso.
+#[derive(Clone)]
+pub struct CacheEntry {
+    payload: Payload,
     ttl: Duration,
     bytes: u32,
     /// Quando este valor foi obtido do SEI (para calcular o header `Age`).
     created: Instant,
 }
 
-/// Expiração por entrada (cache `fresh`): cada valor expira no TTL da sua classe.
+/// Expiração por entrada (cache `fresh`): cada valor expira no seu próprio TTL
+/// (frescor para respostas boas; negative-TTL para SOAP Faults).
 struct PerEntryExpiry;
-impl Expiry<String, CacheValue> for PerEntryExpiry {
-    fn expire_after_create(&self, _key: &String, v: &CacheValue, _now: Instant) -> Option<Duration> {
+impl Expiry<String, CacheEntry> for PerEntryExpiry {
+    fn expire_after_create(&self, _key: &String, v: &CacheEntry, _now: Instant) -> Option<Duration> {
         Some(v.ttl)
     }
 }
@@ -60,10 +69,13 @@ enum Hit {
 /// Cache + contadores globais (para observabilidade no `/health`).
 pub struct SeiCache {
     /// Cache de frescor: TTL curto por classe; é nele que o single-flight ocorre.
-    fresh: Cache<String, CacheValue>,
-    /// Cache de retenção longa para serve-stale (None se desligado).
-    stale: Option<Cache<String, CacheValue>>,
+    fresh: Cache<String, CacheEntry>,
+    /// Cache de retenção longa para serve-stale (None se desligado). Só guarda
+    /// respostas boas (faults nunca vão para o stale).
+    stale: Option<Cache<String, CacheEntry>>,
     enabled: bool,
+    /// TTL do negative caching (SOAP Fault); ZERO desliga.
+    neg_ttl: Duration,
     hits: AtomicU64,
     misses: AtomicU64,
     stales: AtomicU64,
@@ -76,7 +88,7 @@ impl SeiCache {
     pub fn new(cfg: &CacheConfig) -> Arc<Self> {
         let fresh = Cache::builder()
             .max_capacity(cfg.max_bytes)
-            .weigher(|_k: &String, v: &CacheValue| v.bytes)
+            .weigher(|_k: &String, v: &CacheEntry| v.bytes)
             .expire_after(PerEntryExpiry)
             .build();
         let stale = if cfg.stale_ttl.is_zero() {
@@ -85,7 +97,7 @@ impl SeiCache {
             Some(
                 Cache::builder()
                     .max_capacity(cfg.max_bytes)
-                    .weigher(|_k: &String, v: &CacheValue| v.bytes)
+                    .weigher(|_k: &String, v: &CacheEntry| v.bytes)
                     .time_to_live(cfg.stale_ttl)
                     .build(),
             )
@@ -94,6 +106,7 @@ impl SeiCache {
             fresh,
             stale,
             enabled: cfg.enabled,
+            neg_ttl: cfg.neg_ttl,
             hits: AtomicU64::new(0),
             misses: AtomicU64::new(0),
             stales: AtomicU64::new(0),
@@ -145,41 +158,63 @@ impl SeiCache {
         // erro, propaga (respeita o pedido explícito do cliente por dado fresco).
         if ctx_bypass() {
             let v = init.await?;
-            let cv = CacheValue::new(v, ttl);
-            self.store(&key, &cv).await;
+            let entry = CacheEntry::ok(v, ttl);
+            self.store(&key, &entry).await;
             self.note(Hit::Miss, ttl, Duration::ZERO);
-            return Ok((*cv.value).clone());
+            return Ok(entry.value_clone());
         }
 
+        // O init mapeia o resultado: resposta boa -> entrada `Ok`; SOAP Fault ->
+        // entrada `Fault` (negative caching, se habilitado), também cacheada; erro
+        // de infraestrutura -> `Err` (não cacheia; cai no serve-stale).
         let key2 = key.clone();
+        let neg_ttl = self.neg_ttl;
         let res = self
             .fresh
             .entry_by_ref(&key)
-            .or_try_insert_with(async move { init.await.map(|v| CacheValue::new(v, ttl)) })
+            .or_try_insert_with(async move {
+                match init.await {
+                    Ok(v) => Ok(CacheEntry::ok(v, ttl)),
+                    Err(AppError::SoapFault { code, string }) if !neg_ttl.is_zero() => {
+                        Ok(CacheEntry::fault(code, string, neg_ttl))
+                    }
+                    Err(e) => Err(e),
+                }
+            })
             .await;
 
         match res {
             Ok(entry) => {
                 let recem = entry.is_fresh();
-                let cv = entry.into_value();
-                if recem {
-                    // MISS: acabou de buscar — espelha no cache de stale.
-                    if let Some(st) = &self.stale {
-                        st.insert(key2, cv.clone()).await;
+                let entry = entry.into_value();
+                let age = if recem { Duration::ZERO } else { entry.idade() };
+                self.note(if recem { Hit::Miss } else { Hit::Fresh }, entry.ttl, age);
+                match &entry.payload {
+                    Payload::Ok(v) => {
+                        // MISS de resposta boa -> espelha no cache de stale.
+                        if recem {
+                            if let Some(st) = &self.stale {
+                                st.insert(key2, entry.clone()).await;
+                            }
+                        }
+                        Ok((**v).clone())
                     }
-                    self.note(Hit::Miss, ttl, Duration::ZERO);
-                } else {
-                    self.note(Hit::Fresh, ttl, cv.idade());
+                    // Fault cacheado (negativo): devolve o mesmo erro, sem ir ao SEI.
+                    Payload::Fault { code, string } => Err(AppError::SoapFault {
+                        code: code.clone(),
+                        string: string.clone(),
+                    }),
                 }
-                Ok((*cv.value).clone())
             }
             Err(err) => {
                 // Falha de infraestrutura: tenta servir o último valor bom.
                 if err.permite_stale() {
                     if let Some(st) = &self.stale {
-                        if let Some(cv) = st.get(&key2).await {
-                            self.note(Hit::Stale, ttl, cv.idade());
-                            return Ok((*cv.value).clone());
+                        if let Some(entry) = st.get(&key2).await {
+                            if let Payload::Ok(v) = &entry.payload {
+                                self.note(Hit::Stale, entry.ttl, entry.idade());
+                                return Ok((**v).clone());
+                            }
                         }
                     }
                 }
@@ -189,11 +224,11 @@ impl SeiCache {
         }
     }
 
-    /// Escreve nos caches `fresh` e `stale` (compartilhando o `Arc`).
-    async fn store(&self, key: &str, cv: &CacheValue) {
-        self.fresh.insert(key.to_string(), cv.clone()).await;
+    /// Escreve uma resposta boa nos caches `fresh` e `stale` (compartilhando o `Arc`).
+    async fn store(&self, key: &str, entry: &CacheEntry) {
+        self.fresh.insert(key.to_string(), entry.clone()).await;
         if let Some(st) = &self.stale {
-            st.insert(key.to_string(), cv.clone()).await;
+            st.insert(key.to_string(), entry.clone()).await;
         }
     }
 
@@ -232,15 +267,25 @@ impl SeiCache {
     }
 }
 
-impl CacheValue {
-    fn new(value: Value, ttl: Duration) -> Self {
+impl CacheEntry {
+    fn ok(value: Value, ttl: Duration) -> Self {
         // Peso ~= tamanho do JSON serializado (serializa uma vez, no miss).
         let bytes = serde_json::to_string(&value)
             .map(|s| s.len())
             .unwrap_or(0)
             .min(u32::MAX as usize) as u32;
-        CacheValue {
-            value: Arc::new(value),
+        CacheEntry {
+            payload: Payload::Ok(Arc::new(value)),
+            ttl,
+            bytes,
+            created: Instant::now(),
+        }
+    }
+
+    fn fault(code: String, string: String, ttl: Duration) -> Self {
+        let bytes = (code.len() + string.len()).min(u32::MAX as usize) as u32;
+        CacheEntry {
+            payload: Payload::Fault { code, string },
             ttl,
             bytes,
             created: Instant::now(),
@@ -250,6 +295,14 @@ impl CacheValue {
     /// Há quanto tempo este valor foi obtido do SEI.
     fn idade(&self) -> Duration {
         Instant::now().saturating_duration_since(self.created)
+    }
+
+    /// Clona o JSON de uma entrada `Ok` (usado no caminho de bypass, sempre `Ok`).
+    fn value_clone(&self) -> Value {
+        match &self.payload {
+            Payload::Ok(v) => (**v).clone(),
+            Payload::Fault { .. } => Value::Null,
+        }
     }
 }
 
@@ -393,6 +446,10 @@ mod tests {
     use super::*;
 
     fn cfg_para_teste(ttl_dinamico: Duration, stale_ttl: Duration) -> CacheConfig {
+        cfg_neg(ttl_dinamico, stale_ttl, Duration::from_secs(30))
+    }
+
+    fn cfg_neg(ttl_dinamico: Duration, stale_ttl: Duration, neg_ttl: Duration) -> CacheConfig {
         CacheConfig {
             enabled: true,
             max_bytes: 8 * 1024 * 1024,
@@ -400,6 +457,7 @@ mod tests {
             ttl_semi: Duration::from_secs(60),
             ttl_dinamico,
             stale_ttl,
+            neg_ttl,
         }
     }
 
@@ -452,6 +510,55 @@ mod tests {
             })
             .await;
         assert!(r3.is_err(), "fault não deve ser mascarado por stale");
+    }
+
+    #[tokio::test]
+    async fn negative_caching_lembra_fault_mas_nao_erro_de_infra() {
+        use std::sync::atomic::{AtomicUsize, Ordering as O};
+        let ttl = Duration::from_secs(30);
+
+        // (a) SOAP Fault é cacheado -> init roda só 1x; 2ª devolve o mesmo fault.
+        let c = SeiCache::new(&cfg_neg(ttl, Duration::ZERO, Duration::from_secs(30)));
+        let n = Arc::new(AtomicUsize::new(0));
+        for _ in 0..2 {
+            let n2 = n.clone();
+            let r = c
+                .get_or_fetch("k".into(), ttl, async move {
+                    n2.fetch_add(1, O::SeqCst);
+                    Err(AppError::SoapFault { code: "1".into(), string: "inexistente".into() })
+                })
+                .await;
+            assert!(matches!(r, Err(AppError::SoapFault { .. })));
+        }
+        assert_eq!(n.load(O::SeqCst), 1, "fault deve ser cacheado (init 1x)");
+
+        // (b) erro de infra NÃO é cacheado -> init roda nas duas vezes.
+        let c2 = SeiCache::new(&cfg_neg(ttl, Duration::ZERO, Duration::from_secs(30)));
+        let m = Arc::new(AtomicUsize::new(0));
+        for _ in 0..2 {
+            let m2 = m.clone();
+            let _ = c2
+                .get_or_fetch("k".into(), ttl, async move {
+                    m2.fetch_add(1, O::SeqCst);
+                    Err(AppError::Timeout)
+                })
+                .await;
+        }
+        assert_eq!(m.load(O::SeqCst), 2, "erro de infra não deve ser cacheado");
+
+        // (c) negative caching desligado (neg_ttl=0) -> fault não é cacheado.
+        let c3 = SeiCache::new(&cfg_neg(ttl, Duration::ZERO, Duration::ZERO));
+        let p = Arc::new(AtomicUsize::new(0));
+        for _ in 0..2 {
+            let p2 = p.clone();
+            let _ = c3
+                .get_or_fetch("k".into(), ttl, async move {
+                    p2.fetch_add(1, O::SeqCst);
+                    Err(AppError::SoapFault { code: "1".into(), string: "x".into() })
+                })
+                .await;
+        }
+        assert_eq!(p.load(O::SeqCst), 2, "com neg desligado, fault não é cacheado");
     }
 
     #[tokio::test]
