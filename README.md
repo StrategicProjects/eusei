@@ -116,8 +116,11 @@ Veja [`.env.example`](.env.example). Em produção, as variáveis vêm de
 
 ## Autenticação
 
-Todas as rotas (exceto `/health`) exigem `Authorization: Bearer <token>`, validado
-contra `EUSEI_TOKENS`.
+As rotas de dados `/v1/*` exigem `Authorization: Bearer <token>`, validado contra
+`EUSEI_TOKENS` (comparação em tempo constante). O nome do esquema é
+case-insensitive (`Bearer`/`bearer`). São **públicas** (sem token): `/health`, a
+landing (`/`), a documentação (`/__docs__`), o `/openapi.json` e os assets
+(CSS/fontes).
 
 ## Uso
 
@@ -148,15 +151,32 @@ curl -H 'Authorization: Bearer SEU-TOKEN' \
 | `GET /v1/documento?protocolo=` | consulta um documento |
 | `GET /v1/publicacao?...` | consulta publicação (id_publicacao/id_documento/protocolo_documento) |
 | `GET /v1/bloco?id=` | consulta um bloco |
+| `GET /v1/andamentos?protocolo=` | linha do tempo (fatiada em lotes; resposta inclui `resumo`) |
+| `GET /v1/andamentos/stream?protocolo=` | mesma consulta via **SSE** (eventos `progresso`/`concluido`) |
+| `GET /v1/documentos-processo?protocolo=` | documentos do processo (heurística da timeline) |
+| `GET /v1/publicacoes-processo?protocolo=` | publicações do processo (heurística da timeline) |
+| `GET /v1/permissao?...` | SIP — permissões (requer `SEI_SIP_*`) |
 | `GET /v1/{paises,estados,cidades,unidades,series,tipos-procedimento,...}` | listas read-only |
 
 As variantes com path (`/v1/procedimento/{protocolo}`) existem para uso interno
 (`127.0.0.1:18088`), onde o `%2F` é preservado.
 
+**Campos derivados / extras:** `/v1/procedimento` inclui `concluido` (`true`/`false`/`null`)
+derivado de `UnidadesProcedimentoAberto`; `/v1/andamentos` (e docs/publicações-processo)
+incluem um `resumo` dos lotes (`lotes`, `registros`, `parciais`).
+
+**Cache:** respostas de `/v1/*` são cacheadas em memória (read-only) com single-flight
+e *serve-stale* quando o SEI cai. Cada resposta traz `X-Cache: HIT|MISS|STALE|PARTIAL`
+e `Cache-Control`/`Age` coerentes com o TTL; envie `Cache-Control: no-cache` para
+forçar dados frescos. Ajustável por env (`EUSEI_CACHE*`, ver `.env.example`); `/health`
+expõe estatísticas do cache.
+
 ### Formato da resposta
 
 Sucesso devolve `{ ok, dados }`, com os nomes originais do SEI (`xsi:nil` → `null`,
-arrays como listas JSON). Abaixo, a estrutura de um processo:
+arrays como listas JSON). Algumas rotas acrescentam campos derivados ao lado de
+`dados` (ex.: `concluido` em processos; `resumo` em andamentos). Abaixo, a
+estrutura de um processo:
 
 <p align="center">
   <img src="assets/resposta.svg" alt="Anatomia da resposta de um processo" width="380"/>
