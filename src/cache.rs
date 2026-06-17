@@ -367,6 +367,26 @@ fn ctx_bypass() -> bool {
     REQ.try_with(|c| c.bypass).unwrap_or(false)
 }
 
+/// Lê o flag de bypass do contexto de cache da requisição atual (false se fora
+/// de escopo). Para capturar antes de `tokio::spawn` e repassar via [`com_bypass`].
+pub fn bypass_atual() -> bool {
+    ctx_bypass()
+}
+
+/// Executa `fut` dentro de um contexto de cache com o `bypass` dado. Necessário
+/// para repassar o bypass a uma task spawnada — o task-local não cruza
+/// `tokio::spawn` (usado pelo endpoint SSE de andamentos).
+pub async fn com_bypass<F>(bypass: bool, fut: F) -> F::Output
+where
+    F: std::future::Future,
+{
+    let ctx = ReqCtx {
+        bypass,
+        stats: Arc::new(ReqStats::default()),
+    };
+    REQ.scope(ctx, fut).await
+}
+
 /// Middleware: lê `Cache-Control` (bypass), abre o escopo do contexto por toda a
 /// execução do handler e, ao final, anota `X-Cache: HIT|MISS|STALE|PARTIAL`.
 pub async fn middleware(

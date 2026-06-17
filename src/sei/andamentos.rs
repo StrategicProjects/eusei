@@ -387,8 +387,11 @@ pub async fn andamentos_stream(
 ) -> Result<Sse<impl futures::Stream<Item = Result<Event, Infallible>>>, AppError> {
     // validação de parâmetros antes de abrir o stream (erro -> 400 JSON normal)
     let plano = montar_plano(&q, s.cfg.sei.andamentos_lote)?;
+    // O task-local do cache não cruza o spawn: captura o bypass aqui (ainda no
+    // escopo do middleware) e o repassa, para o stream respeitar `no-cache`.
+    let bypass = crate::cache::bypass_atual();
     let (tx, rx) = futures::channel::mpsc::channel::<Result<Event, Infallible>>(16);
-    tokio::spawn(stream_lotes(s, plano, tx));
+    tokio::spawn(crate::cache::com_bypass(bypass, stream_lotes(s, plano, tx)));
     Ok(Sse::new(rx).keep_alive(KeepAlive::default()))
 }
 

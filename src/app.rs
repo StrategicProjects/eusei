@@ -157,6 +157,33 @@ mod tests {
         format!("http://{addr}/")
     }
 
+    /// Mock que conta POSTs e responde a timeline de exemplo (para testar o cache
+    /// no endpoint SSE de andamentos).
+    async fn mock_sei_andamentos_contado() -> (String, std::sync::Arc<std::sync::atomic::AtomicUsize>) {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        let count = std::sync::Arc::new(AtomicUsize::new(0));
+        let c = count.clone();
+        let app = Router::new().route(
+            "/",
+            axum::routing::post(move |_body: String| {
+                let c = c.clone();
+                async move {
+                    c.fetch_add(1, Ordering::SeqCst);
+                    axum::response::Response::builder()
+                        .header(axum::http::header::CONTENT_TYPE, "text/xml")
+                        .body(Body::from(SOAP_ANDAMENTOS.to_string()))
+                        .unwrap()
+                }
+            }),
+        );
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        tokio::spawn(async move {
+            axum::serve(listener, app).await.unwrap();
+        });
+        (format!("http://{addr}/"), count)
+    }
+
     /// Mock do SEI que responde sempre HTTP 500 (falha sistêmica, sem SOAP Fault).
     async fn mock_sei_500() -> String {
         let app = Router::new().route(
@@ -500,6 +527,34 @@ mod tests {
             .unwrap();
         let resp = app.oneshot(req).await.unwrap();
         assert_eq!(resp.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn stream_respeita_no_cache() {
+        // #(SSE bypass): o stream deve usar o cache e respeitar Cache-Control:no-cache.
+        use std::sync::atomic::Ordering;
+        let (url, count) = mock_sei_andamentos_contado().await;
+        let app = build_app(state_com(url, sip_off()));
+        async fn consumir(app: Router, cc: Option<&'static str>) {
+            let mut b = Request::builder()
+                .uri("/v1/andamentos/stream?protocolo=0001&tarefas=1")
+                .method("GET")
+                .header("Authorization", format!("Bearer {TOKEN}"));
+            if let Some(v) = cc {
+                b = b.header("Cache-Control", v);
+            }
+            let resp = app.oneshot(b.body(Body::empty()).unwrap()).await.unwrap();
+            assert_eq!(resp.status(), StatusCode::OK);
+            // drena o stream até o fim (garante que a task spawnada terminou)
+            let _ = to_bytes(resp.into_body(), 4 << 20).await.unwrap();
+        }
+        consumir(app.clone(), None).await; // MISS -> popula o cache
+        let c1 = count.load(Ordering::SeqCst);
+        assert!(c1 >= 1, "1ª chamada vai ao SEI");
+        consumir(app.clone(), None).await; // HIT -> sem nova chamada
+        assert_eq!(count.load(Ordering::SeqCst), c1, "2ª sem no-cache: cache hit");
+        consumir(app.clone(), Some("no-cache")).await; // bypass -> revalida
+        assert!(count.load(Ordering::SeqCst) > c1, "no-cache deve revalidar no SEI");
     }
 
     #[tokio::test]
