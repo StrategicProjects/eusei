@@ -93,7 +93,7 @@ mod tests {
 
     const SOAP_OBJETO: &str = r#"<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><Resp><parametros><ProcedimentoFormatado>0001/2022</ProcedimentoFormatado></parametros></Resp></soap:Body></soap:Envelope>"#;
     const SOAP_LISTA: &str = r#"<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><Resp><parametros><item><Nome>BRASIL</Nome></item><item><Nome>PORTUGAL</Nome></item></parametros></Resp></soap:Body></soap:Envelope>"#;
-    const SOAP_ANDAMENTOS: &str = r#"<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><Resp><parametros><item><DataHora>30/06/2022 13:56:27</DataHora><Descricao>Gerado documento 84230597</Descricao></item></parametros></Resp></soap:Body></soap:Envelope>"#;
+    const SOAP_ANDAMENTOS: &str = r#"<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><Resp><parametros><item><IdAndamento>13</IdAndamento><DataHora>30/06/2022 13:56:27</DataHora><Descricao>Gerado documento 84230597</Descricao></item></parametros></Resp></soap:Body></soap:Envelope>"#;
     const SOAP_SIP_RETURN: &str = r#"<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><Resp><returnPermissoes><item><IdUsuario>42</IdUsuario></item></returnPermissoes></Resp></soap:Body></soap:Envelope>"#;
 
     fn state_com(sei_url: String, sip: SipConfig) -> AppState {
@@ -107,6 +107,8 @@ mod tests {
                     identificacao_servico: "chave".into(),
                     id_unidade: "1".into(),
                     timeout_secs: 5,
+                    andamentos_lote: 10,
+                    andamentos_conc: 4,
                 },
                 sip,
                 log_filter: "off".into(),
@@ -220,6 +222,51 @@ mod tests {
         assert_eq!(status, StatusCode::BAD_GATEWAY);
         assert_eq!(body["ok"], false);
         assert_eq!(body["codigo"], "sei_erro_http");
+    }
+
+    #[tokio::test]
+    async fn andamentos_fatiado_inclui_resumo_e_deduplica() {
+        // #22: a linha do tempo completa é fatiada em lotes (default 1..200 ->
+        // vários lotes). O mock devolve o mesmo IdAndamento em cada lote: a
+        // resposta deve trazer `resumo` e deduplicar para 1 registro.
+        let url = mock_sei().await;
+        let app = build_app(state_com(url, sip_off()));
+        let (status, body) = get(app, "/v1/andamentos?protocolo=0001", Some(TOKEN)).await;
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(body["ok"], true);
+        assert!(body["resumo"]["lotes"].as_u64().unwrap() > 1, "deve fatiar em vários lotes");
+        assert_eq!(body["resumo"]["parciais"], false);
+        // dedup por IdAndamento: todos os lotes trazem o mesmo id -> 1 registro
+        assert_eq!(body["dados"].as_array().unwrap().len(), 1);
+        assert_eq!(body["resumo"]["registros"], 1);
+    }
+
+    #[tokio::test]
+    async fn andamentos_stream_emite_progresso_e_concluido() {
+        // #22: o endpoint SSE emite eventos `progresso` e um `concluido` final.
+        let url = mock_sei().await;
+        let app = build_app(state_com(url, sip_off()));
+        let req = Request::builder()
+            .uri("/v1/andamentos/stream?protocolo=0001")
+            .method("GET")
+            .header("Authorization", format!("Bearer {TOKEN}"))
+            .body(Body::empty())
+            .unwrap();
+        let resp = app.oneshot(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let ct = resp
+            .headers()
+            .get(axum::http::header::CONTENT_TYPE)
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("")
+            .to_string();
+        assert!(ct.contains("text/event-stream"), "content-type SSE, veio: {ct}");
+        let bytes = to_bytes(resp.into_body(), 4 << 20).await.unwrap();
+        let texto = String::from_utf8_lossy(&bytes);
+        // O nome do evento aparece numa linha `event:<nome>` (com ou sem espaço,
+        // conforme a serialização do axum).
+        assert!(texto.contains("progresso"), "deve emitir progresso; corpo: {texto}");
+        assert!(texto.contains("concluido"), "deve emitir concluido; corpo: {texto}");
     }
 
     #[tokio::test]
