@@ -10,8 +10,8 @@
 class Eusei < Formula
   desc "API HTTP/JSON read-only para os Web Services do SEI"
   homepage "https://github.com/StrategicProjects/eusei"
-  url "https://github.com/StrategicProjects/eusei/archive/refs/tags/v0.5.1.tar.gz"
-  sha256 "b0662528ecd86d7d8a64b51a3668f7301a19ce9aeafa743205dd6939ba47b283"
+  url "https://github.com/StrategicProjects/eusei/archive/refs/tags/v0.5.2.tar.gz"
+  sha256 "bba18e90508987ce7e132cbf5738fbaf50956fbb5ef5aa8f781ea024d7375f58"
   license "GPL-3.0-or-later"
   head "https://github.com/StrategicProjects/eusei.git", branch: "main"
 
