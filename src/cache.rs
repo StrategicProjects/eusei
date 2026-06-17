@@ -454,8 +454,9 @@ pub async fn middleware(
     if min_ttl != u64::MAX {
         let success = resp.status().is_success();
         let headers = resp.headers_mut();
-        if !success {
-            // erros não devem ser cacheados
+        if bypass == Bypass::NoStore || !success {
+            // no-store (respeita o pedido do cliente) ou erro: nada de cachear,
+            // nem no cliente/proxy privado.
             headers.insert(CACHE_CONTROL, HeaderValue::from_static("no-store"));
         } else if s > 0 {
             // dado obsoleto servido: o cliente não deve recachear sem revalidar

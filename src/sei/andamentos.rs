@@ -404,9 +404,15 @@ pub async fn andamentos_stream(
 /// autorização como "sem publicações".
 fn fault_sem_publicacao(faultstring: &str) -> bool {
     let s = faultstring.to_lowercase();
+    // Erros de método/serviço (config/autorização) NUNCA são benignos — mesmo que
+    // a mensagem cite "publicação" (ex.: "Método consultarPublicacao não encontrado",
+    // "Serviço de publicação não encontrado").
+    if s.contains("método") || s.contains("metodo") || s.contains("serviço") || s.contains("servico")
+    {
+        return false;
+    }
     let nao_encontrado = s.contains("não encontrad") || s.contains("nao encontrad");
-    // "documento ... não encontrado" é benigno; "serviço/método não encontrado"
-    // indica autorização/configuração e NÃO deve ser silenciado.
+    // "documento ... não encontrado" é benigno (documento heurístico inexistente).
     let doc_nao_encontrado = nao_encontrado && s.contains("documento");
     let sem_publicacao = s.contains("publica")
         && (s.contains("sem ")
@@ -581,9 +587,12 @@ mod tests {
         assert!(!fault_sem_publicacao("Usuário não tem acesso ao serviço."));
         assert!(!fault_sem_publicacao("Serviço não disponível."));
         assert!(!fault_sem_publicacao("Acesso negado."));
-        // "serviço/método não encontrado" NÃO é benigno (config/autorização)
+        // "serviço/método não encontrado" NÃO é benigno (config/autorização),
+        // mesmo citando "publicação"
         assert!(!fault_sem_publicacao("Serviço não encontrado."));
         assert!(!fault_sem_publicacao("Método não encontrado."));
+        assert!(!fault_sem_publicacao("Método consultarPublicacao não encontrado."));
+        assert!(!fault_sem_publicacao("Serviço de publicação não encontrado."));
     }
 
     #[test]
