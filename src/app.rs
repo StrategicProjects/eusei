@@ -347,6 +347,39 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn procedimentos_falha_total_transitoria_retorna_erro() {
+        // #(batch): se todos os itens falham por erro transitório (HTTP 500), o
+        // lote deve virar erro (502), não 200 ok:true cacheável.
+        let url = mock_sei_500().await;
+        let app = build_app(state_com(url, sip_off()));
+        let (status, body) = get(app, "/v1/procedimentos?protocolos=0001,0002", Some(TOKEN)).await;
+        assert_eq!(status, StatusCode::BAD_GATEWAY);
+        assert_eq!(body["ok"], false);
+        assert_eq!(body["codigo"], "sei_erro_http");
+    }
+
+    #[tokio::test]
+    async fn no_store_em_erro_ainda_responde_no_store() {
+        // #(bypass): no-store que falha no upstream deve voltar com Cache-Control:
+        // no-store (o note é registrado mesmo em erro).
+        let url = mock_sei_500().await;
+        let app = build_app(state_com(url, sip_off()));
+        let req = Request::builder()
+            .uri("/v1/paises")
+            .method("GET")
+            .header("Authorization", format!("Bearer {TOKEN}"))
+            .header("Cache-Control", "no-store")
+            .body(Body::empty())
+            .unwrap();
+        let resp = app.oneshot(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::BAD_GATEWAY);
+        assert_eq!(
+            resp.headers().get("cache-control").and_then(|v| v.to_str().ok()),
+            Some("no-store")
+        );
+    }
+
+    #[tokio::test]
     async fn andamentos_falha_total_dos_lotes_retorna_erro() {
         // #35: se todos os lotes falham sistemicamente (HTTP 500), a resposta deve
         // ser erro (502), não 200 com dados vazios.

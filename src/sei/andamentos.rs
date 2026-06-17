@@ -230,9 +230,12 @@ async fn fetch_andamentos(state: &AppState, q: &AndamentosQuery) -> Result<(Valu
     let protocolo = plano.protocolo.as_str();
     let sra = plano.sra.as_str();
 
+    // `buffered` (não `buffer_unordered`): preserva a ordem dos lotes na coleta,
+    // para que `ordenar=false` produza uma ordem determinística (a dos lotes, e a
+    // do SEI dentro de cada um) em vez de depender de qual lote terminou primeiro.
     let resultados: Vec<Result<Value, AppError>> = futures::stream::iter(plano.lotes.into_iter())
         .map(|filtro| chamar_lote(state, protocolo, sra, filtro))
-        .buffer_unordered(state.cfg.sei.andamentos_conc)
+        .buffered(state.cfg.sei.andamentos_conc)
         .collect()
         .await;
 
