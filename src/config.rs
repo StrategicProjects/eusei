@@ -153,10 +153,26 @@ impl AppConfig {
         if identificacao_servico.is_empty() {
             return Err("SEI_IDENTIFICACAO_SERVICO ausente (chave de acesso do SEI).".into());
         }
+        // Recusa subir com a chave de exemplo/placeholder (defesa em profundidade,
+        // espelha a checagem do token). Evita iniciar e só falhar em runtime.
+        let chave_up = identificacao_servico.to_uppercase();
+        if ["COLOQUE", "TROQUE", "CHANGE", "ALTERE"]
+            .iter()
+            .any(|p| chave_up.starts_with(p))
+            || chave_up.contains("CHAVE_DE_ACESSO")
+        {
+            return Err(
+                "SEI_IDENTIFICACAO_SERVICO contém um placeholder (ex.: \
+                 'COLOQUE_A_CHAVE_DE_ACESSO_AQUI'): defina a chave de acesso real do SEI."
+                    .into(),
+            );
+        }
 
         let timeout_secs = get("SEI_TIMEOUT_SECS", "60")
             .parse::<u64>()
-            .map_err(|_| "SEI_TIMEOUT_SECS inválido (esperado inteiro).".to_string())?;
+            .ok()
+            .filter(|n| *n > 0)
+            .ok_or("SEI_TIMEOUT_SECS inválido (esperado inteiro > 0).".to_string())?;
 
         let andamentos_lote = get("SEI_ANDAMENTOS_LOTE", "8")
             .parse::<usize>()
@@ -174,20 +190,27 @@ impl AppConfig {
             get("EUSEI_CACHE", "on").to_ascii_lowercase().as_str(),
             "off" | "0" | "false" | "no"
         );
-        let dur_secs = |key: &str, default: u64| -> Duration {
-            Duration::from_secs(get(key, &default.to_string()).parse().unwrap_or(default))
+        // Valor inválido (não-numérico) falha cedo, em vez de cair silenciosamente
+        // no default — escondia erro operacional. TTLs aceitam 0 (desligam stale/neg).
+        let dur_secs = |key: &str, default: u64| -> Result<Duration, String> {
+            get(key, &default.to_string())
+                .parse::<u64>()
+                .map(Duration::from_secs)
+                .map_err(|_| format!("{key} inválido (esperado inteiro de segundos)."))
         };
+        let cache_max_mb = get("EUSEI_CACHE_MAX_MB", "256")
+            .parse::<u64>()
+            .ok()
+            .filter(|n| *n > 0)
+            .ok_or("EUSEI_CACHE_MAX_MB inválido (esperado inteiro de MB > 0).".to_string())?;
         let cache = CacheConfig {
             enabled: cache_enabled,
-            max_bytes: get("EUSEI_CACHE_MAX_MB", "256")
-                .parse::<u64>()
-                .unwrap_or(256)
-                .saturating_mul(1024 * 1024),
-            ttl_estatico: dur_secs("EUSEI_CACHE_TTL_ESTATICO_SECS", 21_600), // 6h
-            ttl_semi: dur_secs("EUSEI_CACHE_TTL_SEMI_SECS", 600),            // 10min
-            ttl_dinamico: dur_secs("EUSEI_CACHE_TTL_DINAMICO_SECS", 30),     // 30s
-            stale_ttl: dur_secs("EUSEI_CACHE_STALE_SECS", 86_400),           // 24h
-            neg_ttl: dur_secs("EUSEI_CACHE_NEG_SECS", 30),                   // 30s
+            max_bytes: cache_max_mb.saturating_mul(1024 * 1024),
+            ttl_estatico: dur_secs("EUSEI_CACHE_TTL_ESTATICO_SECS", 21_600)?, // 6h
+            ttl_semi: dur_secs("EUSEI_CACHE_TTL_SEMI_SECS", 600)?,            // 10min
+            ttl_dinamico: dur_secs("EUSEI_CACHE_TTL_DINAMICO_SECS", 30)?,     // 30s
+            stale_ttl: dur_secs("EUSEI_CACHE_STALE_SECS", 86_400)?,           // 24h
+            neg_ttl: dur_secs("EUSEI_CACHE_NEG_SECS", 30)?,                   // 30s
         };
 
         Ok(AppConfig {
