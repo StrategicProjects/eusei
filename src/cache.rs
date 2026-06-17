@@ -37,6 +37,8 @@ pub struct CacheValue {
     value: Arc<Value>,
     ttl: Duration,
     bytes: u32,
+    /// Quando este valor foi obtido do SEI (para calcular o header `Age`).
+    created: Instant,
 }
 
 /// Expiração por entrada (cache `fresh`): cada valor expira no TTL da sua classe.
@@ -145,7 +147,7 @@ impl SeiCache {
             let v = init.await?;
             let cv = CacheValue::new(v, ttl);
             self.store(&key, &cv).await;
-            self.note(Hit::Miss);
+            self.note(Hit::Miss, ttl, Duration::ZERO);
             return Ok((*cv.value).clone());
         }
 
@@ -165,9 +167,9 @@ impl SeiCache {
                     if let Some(st) = &self.stale {
                         st.insert(key2, cv.clone()).await;
                     }
-                    self.note(Hit::Miss);
+                    self.note(Hit::Miss, ttl, Duration::ZERO);
                 } else {
-                    self.note(Hit::Fresh);
+                    self.note(Hit::Fresh, ttl, cv.idade());
                 }
                 Ok((*cv.value).clone())
             }
@@ -176,12 +178,12 @@ impl SeiCache {
                 if err.permite_stale() {
                     if let Some(st) = &self.stale {
                         if let Some(cv) = st.get(&key2).await {
-                            self.note(Hit::Stale);
+                            self.note(Hit::Stale, ttl, cv.idade());
                             return Ok((*cv.value).clone());
                         }
                     }
                 }
-                self.note(Hit::Miss);
+                self.note(Hit::Miss, ttl, Duration::ZERO);
                 Err((*err).clone())
             }
         }
@@ -195,8 +197,9 @@ impl SeiCache {
         }
     }
 
-    /// Registra o resultado nos contadores globais e na estatística da requisição.
-    fn note(&self, hit: Hit) {
+    /// Registra o resultado nos contadores globais e na estatística da requisição,
+    /// incluindo o menor TTL e a maior idade vistos (para `Cache-Control`/`Age`).
+    fn note(&self, hit: Hit, ttl: Duration, age: Duration) {
         let global = match hit {
             Hit::Fresh => &self.hits,
             Hit::Miss => &self.misses,
@@ -210,6 +213,8 @@ impl SeiCache {
                 Hit::Stale => &s.stats.stales,
             };
             counter.fetch_add(1, Ordering::Relaxed);
+            s.stats.min_ttl.fetch_min(ttl.as_secs(), Ordering::Relaxed);
+            s.stats.max_age.fetch_max(age.as_secs(), Ordering::Relaxed);
         });
     }
 
@@ -238,7 +243,13 @@ impl CacheValue {
             value: Arc::new(value),
             ttl,
             bytes,
+            created: Instant::now(),
         }
+    }
+
+    /// Há quanto tempo este valor foi obtido do SEI.
+    fn idade(&self) -> Duration {
+        Instant::now().saturating_duration_since(self.created)
     }
 }
 
@@ -268,11 +279,26 @@ fn encode_params(extra: &[(&str, Param)]) -> String {
 
 // --- Contexto por requisição (bypass + estatística para o header X-Cache) ------
 
-#[derive(Default)]
 struct ReqStats {
     hits: AtomicU64,
     misses: AtomicU64,
     stales: AtomicU64,
+    /// Menor TTL (s) entre as operações cacheáveis tocadas (u64::MAX = nenhuma).
+    min_ttl: AtomicU64,
+    /// Maior idade (s) de um valor servido do cache (para o header `Age`).
+    max_age: AtomicU64,
+}
+
+impl Default for ReqStats {
+    fn default() -> Self {
+        ReqStats {
+            hits: AtomicU64::new(0),
+            misses: AtomicU64::new(0),
+            stales: AtomicU64::new(0),
+            min_ttl: AtomicU64::new(u64::MAX),
+            max_age: AtomicU64::new(0),
+        }
+    }
 }
 
 struct ReqCtx {
@@ -294,7 +320,10 @@ pub async fn middleware(
     req: axum::extract::Request,
     next: axum::middleware::Next,
 ) -> axum::response::Response {
-    use axum::http::{header::CACHE_CONTROL, HeaderValue};
+    use axum::http::{
+        header::{CACHE_CONTROL, AGE},
+        HeaderValue,
+    };
 
     let bypass = req
         .headers()
@@ -331,6 +360,30 @@ pub async fn middleware(
     if let Some(l) = label {
         resp.headers_mut()
             .insert("x-cache", HeaderValue::from_static(l));
+    }
+
+    // Cache-Control coerente com o TTL da operação (só quando houve operação
+    // cacheável). max-age = TTL pleno + Age = idade já decorrida (o cliente
+    // calcula o frescor restante — evita staleness composta).
+    let min_ttl = stats.min_ttl.load(Ordering::Relaxed);
+    if min_ttl != u64::MAX {
+        let success = resp.status().is_success();
+        let headers = resp.headers_mut();
+        if !success {
+            // erros não devem ser cacheados
+            headers.insert(CACHE_CONTROL, HeaderValue::from_static("no-store"));
+        } else if s > 0 {
+            // dado obsoleto servido: o cliente não deve recachear sem revalidar
+            headers.insert(CACHE_CONTROL, HeaderValue::from_static("private, no-cache"));
+        } else {
+            let age = stats.max_age.load(Ordering::Relaxed);
+            if let Ok(cc) = HeaderValue::from_str(&format!("private, max-age={min_ttl}")) {
+                headers.insert(CACHE_CONTROL, cc);
+            }
+            if let Ok(a) = HeaderValue::from_str(&age.to_string()) {
+                headers.insert(AGE, a);
+            }
+        }
     }
     resp
 }
