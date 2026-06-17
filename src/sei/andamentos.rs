@@ -398,7 +398,10 @@ pub async fn andamentos_stream(
 fn numero_documento(descricao: &str) -> Option<String> {
     let lower = descricao.to_lowercase();
     let pos = lower.find("documento")? + "documento".len();
-    let rest = &descricao[pos..];
+    // Fatiar a própria string em minúsculas: `pos` é um índice de bytes válido
+    // nela (não na original, cujo comprimento em bytes pode diferir após o
+    // lowercase de algum caractere). Os dígitos são ASCII, idênticos nas duas.
+    let rest = &lower[pos..];
     let digits: String = rest
         .chars()
         .skip_while(|c| !c.is_ascii_digit())
@@ -539,6 +542,16 @@ mod tests {
             Some("84230597".to_string())
         );
         assert_eq!(numero_documento("Conclusão do processo na unidade"), None);
+    }
+
+    #[test]
+    fn numero_documento_resiste_a_unicode_antes_da_palavra() {
+        // 'ẞ' (3 bytes) -> 'ß' (2 bytes) no lowercase: índice calculado no lower
+        // não casaria com a string original. Não deve panicar e deve extrair o nº.
+        assert_eq!(
+            numero_documento("ẞ Gerado documento 654321"),
+            Some("654321".to_string())
+        );
     }
 
     #[test]
