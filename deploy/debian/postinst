@@ -13,7 +13,8 @@ case "$1" in
     fi
 
     if [ ! -f /etc/eusei.env ]; then
-      TOKEN="$(head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | cut -c1-43)"
+      # 64 bytes antes do filtro garantem >= 43 chars (tr remove +,/,= do base64)
+      TOKEN="$(head -c 64 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | cut -c1-43)"
       cat > /etc/eusei.env <<EOF
 EUSEI_BIND=127.0.0.1:18088
 EUSEI_TOKENS=${TOKEN}

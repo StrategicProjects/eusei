@@ -27,8 +27,9 @@ fi
 ts="$(date +%Y%m%d-%H%M%S 2>/dev/null || echo bak)"
 cp -a "$ENV" "${ENV}.bak-rotate-${ts}"
 
-# Token Bearer: 43 chars alfanuméricos (~256 bits de entropia).
-NEW_TOKEN="$(head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | cut -c1-43)"
+# Token Bearer: 43 chars alfanuméricos (~256 bits de entropia). Gera 64 bytes
+# antes do filtro para garantir os 43 chars (tr remove +,/,= do base64).
+NEW_TOKEN="$(head -c 64 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | cut -c1-43)"
 
 # Atualiza KEY=VALUE no env (ou acrescenta no fim se ausente), de forma segura:
 # o valor é passado via ENVIRON para o awk, sem interpolação pelo shell.

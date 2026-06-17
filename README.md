@@ -166,10 +166,15 @@ derivado de `UnidadesProcedimentoAberto`; `/v1/andamentos` (e docs/publicações
 incluem um `resumo` dos lotes (`lotes`, `registros`, `parciais`).
 
 **Cache:** respostas de `/v1/*` são cacheadas em memória (read-only) com single-flight
-e *serve-stale* quando o SEI cai. Cada resposta traz `X-Cache: HIT|MISS|STALE|PARTIAL`
+e *serve-stale* quando o SEI cai. As respostas **JSON** trazem `X-Cache: HIT|MISS|STALE|PARTIAL`
 e `Cache-Control`/`Age` coerentes com o TTL; envie `Cache-Control: no-cache` para
-forçar dados frescos. Ajustável por env (`EUSEI_CACHE*`, ver `.env.example`); `/health`
-expõe estatísticas do cache.
+revalidar ou `no-store` para buscar fresco sem persistir. Ajustável por env
+(`EUSEI_CACHE*`, ver `.env.example`); `/health` expõe estatísticas do cache.
+
+> O endpoint **SSE** `/v1/andamentos/stream` é a exceção: por ser um fluxo de
+> eventos, a resposta **não** carrega `X-Cache`/`Cache-Control` (o status do cache
+> não é exposto por evento), mas ele **respeita** `no-cache`/`no-store` da
+> requisição para revalidar/buscar fresco.
 
 ### Formato da resposta
 
