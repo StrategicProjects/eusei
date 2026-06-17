@@ -466,6 +466,11 @@ mod tests {
         };
         let r1 = app.clone().oneshot(pedir(Some("no-store"))).await.unwrap();
         assert_eq!(r1.status(), StatusCode::OK);
+        // a resposta não deve dizer ao cliente para cachear
+        assert_eq!(
+            r1.headers().get("cache-control").and_then(|v| v.to_str().ok()),
+            Some("no-store")
+        );
         assert_eq!(count.load(Ordering::SeqCst), 1);
         // sem persistência: a 2ª (normal) volta ao SEI (MISS), não HIT
         let r2 = app.clone().oneshot(pedir(None)).await.unwrap();
