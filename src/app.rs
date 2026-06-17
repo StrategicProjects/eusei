@@ -130,6 +130,33 @@ mod tests {
         (format!("http://{addr}/"), count)
     }
 
+    /// Mock do SEI que responde a `listarAndamentos` com a timeline de exemplo
+    /// (1 documento) e a `consultarPublicacao` com um SOAP Fault de `msg`.
+    async fn mock_sei_pub_fault(msg: &'static str) -> String {
+        let handler = move |body: String| async move {
+            let resp = |xml: String| {
+                axum::response::Response::builder()
+                    .header(axum::http::header::CONTENT_TYPE, "text/xml")
+                    .body(Body::from(xml))
+                    .unwrap()
+            };
+            if body.contains("consultarPublicacao") {
+                resp(format!(
+                    r#"<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><soap:Fault><faultcode>soap:Server</faultcode><faultstring>{msg}</faultstring></soap:Fault></soap:Body></soap:Envelope>"#
+                ))
+            } else {
+                resp(SOAP_ANDAMENTOS.to_string())
+            }
+        };
+        let app = Router::new().route("/", axum::routing::post(handler));
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        tokio::spawn(async move {
+            axum::serve(listener, app).await.unwrap();
+        });
+        format!("http://{addr}/")
+    }
+
     /// Mock do SEI que responde sempre HTTP 500 (falha sistêmica, sem SOAP Fault).
     async fn mock_sei_500() -> String {
         let app = Router::new().route(
@@ -437,6 +464,42 @@ mod tests {
         assert_eq!(body["dados"]["ProcedimentoFormatado"], "0001/2022");
         assert!(body.as_object().unwrap().contains_key("concluido"), "deve emitir 'concluido'");
         assert!(body["concluido"].is_null(), "sem unidades -> indeterminado");
+    }
+
+    #[tokio::test]
+    async fn publicacoes_propaga_fault_de_acesso() {
+        // não pode mascarar acesso negado como "sem publicações"
+        let url = mock_sei_pub_fault("Usuário não tem acesso ao serviço").await;
+        let app = build_app(state_com(url, sip_off()));
+        let (status, body) = get(app, "/v1/publicacoes-processo?protocolo=0001", Some(TOKEN)).await;
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+        assert_eq!(body["codigo"], "sei_fault");
+    }
+
+    #[tokio::test]
+    async fn publicacoes_ignora_fault_sem_publicacao() {
+        // documento sem publicação / inexistente -> ignora, lista vazia, ok:true
+        let url = mock_sei_pub_fault("Documento 84230597 não encontrado").await;
+        let app = build_app(state_com(url, sip_off()));
+        let (status, body) = get(app, "/v1/publicacoes-processo?protocolo=0001", Some(TOKEN)).await;
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(body["ok"], true);
+        assert_eq!(body["dados"].as_array().unwrap().len(), 0);
+    }
+
+    #[tokio::test]
+    async fn bearer_aceita_esquema_case_insensitive() {
+        // RFC 7235: o nome do esquema é case-insensitive ("bearer" deve valer).
+        let url = mock_sei().await;
+        let app = build_app(state_com(url, sip_off()));
+        let req = Request::builder()
+            .uri("/v1/paises")
+            .method("GET")
+            .header("Authorization", format!("bearer {TOKEN}"))
+            .body(Body::empty())
+            .unwrap();
+        let resp = app.oneshot(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
     }
 
     #[tokio::test]
