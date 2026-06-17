@@ -158,7 +158,16 @@ impl SeiCache {
         // fresco). `no-cache` ainda atualiza os caches; `no-store` NÃO persiste.
         let modo = ctx_bypass();
         if modo != Bypass::Off {
-            let v = init.await?;
+            // Registra o `note` mesmo em erro: assim o middleware sabe que houve
+            // operação cacheável e aplica `Cache-Control: no-store` também na
+            // resposta de erro de uma requisição no-store/no-cache.
+            let v = match init.await {
+                Ok(v) => v,
+                Err(e) => {
+                    self.note(Hit::Miss, ttl, Duration::ZERO);
+                    return Err(e);
+                }
+            };
             if modo == Bypass::NoCache {
                 self.store(&key, &CacheEntry::ok(v.clone(), ttl)).await;
             }

@@ -131,16 +131,30 @@ pub async fn procedimentos(State(s): State<AppState>, Query(q): Query<ProcsQuery
         .ok_or_else(|| AppError::BadRequest("parâmetro obrigatório ausente: protocolos".into()))?;
     let solic = unidades_solicitadas(&q.flags)?;
     let mut itens = Vec::new();
+    let mut sucessos = 0usize;
+    let mut transitorio: Option<AppError> = None;
     for p in protocolos.split(',').map(|x| x.trim()).filter(|x| !x.is_empty()) {
         let params = proc_params(p.to_string(), &q.flags)?;
         match super::call(&s, "consultarProcedimento", true, &params).await {
             Ok(dados) => {
+                sucessos += 1;
                 let concl = concluido(&dados, solic);
                 itens.push(json!({ "protocolo": p, "dados": dados, "concluido": concl, "erro": Value::Null }));
             }
-            Err(e) => itens.push(
-                json!({ "protocolo": p, "dados": Value::Null, "concluido": Value::Null, "erro": e.to_string() }),
-            ),
+            Err(e) => {
+                if e.permite_stale() && transitorio.is_none() {
+                    transitorio = Some(e.clone());
+                }
+                itens.push(json!({ "protocolo": p, "dados": Value::Null, "concluido": Value::Null, "erro": e.to_string() }));
+            }
+        }
+    }
+    // Nenhum item teve sucesso e houve falha transitória (timeout/indisponível/…):
+    // propaga o erro (não-2xx, não cacheável) em vez de um 200 com tudo falho.
+    // SOAP Faults (ex.: todos inexistentes) seguem como 200 com erros por item.
+    if sucessos == 0 {
+        if let Some(e) = transitorio {
+            return Err(e);
         }
     }
     Ok(Json(json!({ "ok": true, "itens": itens })))
@@ -190,11 +204,27 @@ pub async fn documentos(State(s): State<AppState>, Query(q): Query<DocsQuery>) -
         .filter(|v| !v.trim().is_empty())
         .ok_or_else(|| AppError::BadRequest("parâmetro obrigatório ausente: protocolos".into()))?;
     let mut itens = Vec::new();
+    let mut sucessos = 0usize;
+    let mut transitorio: Option<AppError> = None;
     for p in protocolos.split(',').map(|x| x.trim()).filter(|x| !x.is_empty()) {
         let params = doc_params(p.to_string(), &q.flags)?;
         match super::call(&s, "consultarDocumento", true, &params).await {
-            Ok(dados) => itens.push(json!({ "protocolo": p, "dados": dados, "erro": Value::Null })),
-            Err(e) => itens.push(json!({ "protocolo": p, "dados": Value::Null, "erro": e.to_string() })),
+            Ok(dados) => {
+                sucessos += 1;
+                itens.push(json!({ "protocolo": p, "dados": dados, "erro": Value::Null }));
+            }
+            Err(e) => {
+                if e.permite_stale() && transitorio.is_none() {
+                    transitorio = Some(e.clone());
+                }
+                itens.push(json!({ "protocolo": p, "dados": Value::Null, "erro": e.to_string() }));
+            }
+        }
+    }
+    // todos falharam por erro transitório -> propaga (não-2xx, não cacheável)
+    if sucessos == 0 {
+        if let Some(e) = transitorio {
+            return Err(e);
         }
     }
     Ok(Json(json!({ "ok": true, "itens": itens })))
