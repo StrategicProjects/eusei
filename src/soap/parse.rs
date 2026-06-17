@@ -54,8 +54,9 @@ pub fn return_to_json(body: &str) -> Result<Value, AppError> {
 }
 
 fn is_nil(n: Node) -> bool {
+    // xsi:nil é um booleano do XML Schema: aceita "true"/"false" e "1"/"0".
     n.attributes()
-        .any(|a| a.name() == "nil" && a.value() == "true")
+        .any(|a| a.name() == "nil" && matches!(a.value(), "true" | "1"))
 }
 
 fn is_array(n: Node, element_children: &[Node]) -> bool {
@@ -130,6 +131,16 @@ mod tests {
         assert_eq!(v["TipoProcedimento"]["Nome"], "Licitação: Tomada de Preços");
         // AndamentoConclusao é xsi:nil -> null
         assert_eq!(v["AndamentoConclusao"], Value::Null);
+    }
+
+    #[test]
+    fn nil_aceita_true_e_um() {
+        // xsi:nil booleano: "true" e "1" viram null; "false"/"0" não.
+        let xml = r#"<Resp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><parametros><A xsi:nil="true"/><B xsi:nil="1"/><C xsi:nil="0">x</C></parametros></Resp>"#;
+        let v = parametros_to_json(xml).unwrap();
+        assert_eq!(v["A"], Value::Null);
+        assert_eq!(v["B"], Value::Null);
+        assert_eq!(v["C"], "x");
     }
 
     #[test]
