@@ -137,6 +137,7 @@ mod tests {
             ttl_estatico: std::time::Duration::from_secs(3600),
             ttl_semi: std::time::Duration::from_secs(600),
             ttl_dinamico: std::time::Duration::from_secs(30),
+            stale_ttl: std::time::Duration::from_secs(3600),
         }
     }
 

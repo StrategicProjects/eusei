@@ -45,6 +45,9 @@ pub struct CacheConfig {
     pub ttl_semi: Duration,
     /// TTL de dados de processo (consultas, andamentos) — curto (frescor).
     pub ttl_dinamico: Duration,
+    /// Janela de "serve-stale": por quanto tempo, após o TTL de frescor, o último
+    /// valor bom pode ser servido quando o SEI falha (0 desliga o serve-stale).
+    pub stale_ttl: Duration,
 }
 
 #[derive(Clone)]
@@ -180,6 +183,7 @@ impl AppConfig {
             ttl_estatico: dur_secs("EUSEI_CACHE_TTL_ESTATICO_SECS", 21_600), // 6h
             ttl_semi: dur_secs("EUSEI_CACHE_TTL_SEMI_SECS", 600),            // 10min
             ttl_dinamico: dur_secs("EUSEI_CACHE_TTL_DINAMICO_SECS", 30),     // 30s
+            stale_ttl: dur_secs("EUSEI_CACHE_STALE_SECS", 86_400),           // 24h
         };
 
         Ok(AppConfig {
@@ -237,6 +241,7 @@ mod tests {
                 ttl_estatico: Duration::from_secs(21_600),
                 ttl_semi: Duration::from_secs(600),
                 ttl_dinamico: Duration::from_secs(30),
+                stale_ttl: Duration::from_secs(86_400),
             },
             log_filter: "eusei=info".into(),
         };
