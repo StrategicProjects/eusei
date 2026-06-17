@@ -6,10 +6,14 @@
 //! - **Single-flight**: requisições idênticas concorrentes coalescem numa única
 //!   chamada ao SEI (via `moka::entry().or_try_insert_with`).
 //! - **TTL por classe de operação** (estático / semi / dinâmico), via `Expiry`.
+//! - **Serve-stale-on-error**: se o SEI falha (indisponível/timeout/HTTP/parse), o
+//!   último valor bom é servido (`X-Cache: STALE`) por uma janela maior. Isso usa
+//!   um segundo cache (`stale`) de retenção longa; o valor é `Arc<Value>`, então os
+//!   dois caches **compartilham** a mesma memória (não duplica o payload).
 //! - **Teto de memória** (peso = tamanho do JSON), via `weigher`.
 //! - **Bypass** por `Cache-Control: no-cache`/`no-store` na requisição.
 //! - **Erros não são cacheados** (negative caching fica para uma fase futura).
-//! - **`X-Cache: HIT|MISS|PARTIAL`** na resposta + contadores em `/health`.
+//! - **`X-Cache: HIT|MISS|STALE|PARTIAL`** na resposta + contadores em `/health`.
 //!
 //! A chave de cache deriva de operação + parâmetros **não-secretos** (a chave de
 //! acesso do SEI é injetada depois, no funil, e nunca entra na chave).
@@ -26,15 +30,16 @@ use crate::config::CacheConfig;
 use crate::error::AppError;
 use crate::soap::envelope::Param;
 
-/// Valor guardado no cache: o JSON, seu TTL (para o `Expiry`) e o peso em bytes.
+/// Valor guardado no cache. O JSON vai em `Arc` para que os caches `fresh` e
+/// `stale` compartilhem a mesma alocação.
 #[derive(Clone)]
 pub struct CacheValue {
-    value: Value,
+    value: Arc<Value>,
     ttl: Duration,
     bytes: u32,
 }
 
-/// Expiração por entrada: cada valor expira conforme o TTL da sua classe.
+/// Expiração por entrada (cache `fresh`): cada valor expira no TTL da sua classe.
 struct PerEntryExpiry;
 impl Expiry<String, CacheValue> for PerEntryExpiry {
     fn expire_after_create(&self, _key: &String, v: &CacheValue, _now: Instant) -> Option<Duration> {
@@ -42,12 +47,24 @@ impl Expiry<String, CacheValue> for PerEntryExpiry {
     }
 }
 
+/// Resultado de uma busca, para fins de contagem / header `X-Cache`.
+#[derive(Clone, Copy)]
+enum Hit {
+    Fresh,
+    Miss,
+    Stale,
+}
+
 /// Cache + contadores globais (para observabilidade no `/health`).
 pub struct SeiCache {
-    inner: Cache<String, CacheValue>,
+    /// Cache de frescor: TTL curto por classe; é nele que o single-flight ocorre.
+    fresh: Cache<String, CacheValue>,
+    /// Cache de retenção longa para serve-stale (None se desligado).
+    stale: Option<Cache<String, CacheValue>>,
     enabled: bool,
     hits: AtomicU64,
     misses: AtomicU64,
+    stales: AtomicU64,
     ttl_estatico: Duration,
     ttl_semi: Duration,
     ttl_dinamico: Duration,
@@ -55,16 +72,29 @@ pub struct SeiCache {
 
 impl SeiCache {
     pub fn new(cfg: &CacheConfig) -> Arc<Self> {
-        let inner = Cache::builder()
+        let fresh = Cache::builder()
             .max_capacity(cfg.max_bytes)
             .weigher(|_k: &String, v: &CacheValue| v.bytes)
             .expire_after(PerEntryExpiry)
             .build();
+        let stale = if cfg.stale_ttl.is_zero() {
+            None
+        } else {
+            Some(
+                Cache::builder()
+                    .max_capacity(cfg.max_bytes)
+                    .weigher(|_k: &String, v: &CacheValue| v.bytes)
+                    .time_to_live(cfg.stale_ttl)
+                    .build(),
+            )
+        };
         Arc::new(SeiCache {
-            inner,
+            fresh,
+            stale,
             enabled: cfg.enabled,
             hits: AtomicU64::new(0),
             misses: AtomicU64::new(0),
+            stales: AtomicU64::new(0),
             ttl_estatico: cfg.ttl_estatico,
             ttl_semi: cfg.ttl_semi,
             ttl_dinamico: cfg.ttl_dinamico,
@@ -99,7 +129,8 @@ impl SeiCache {
     }
 
     /// Devolve o valor cacheado para `key` ou executa `init` (uma vez, mesmo sob
-    /// concorrência) e cacheia o resultado. Erros são propagados sem cachear.
+    /// concorrência) e cacheia o resultado. Em falha de infraestrutura do SEI,
+    /// serve o último valor bom (serve-stale). Erros são propagados sem cachear.
     pub async fn get_or_fetch<F>(&self, key: String, ttl: Duration, init: F) -> Result<Value, AppError>
     where
         F: std::future::Future<Output = Result<Value, AppError>> + Send + 'static,
@@ -108,35 +139,76 @@ impl SeiCache {
             return init.await;
         }
 
-        // Bypass (Cache-Control: no-cache): busca fresco e atualiza o cache.
+        // Bypass (Cache-Control: no-cache): busca fresco e atualiza os caches; em
+        // erro, propaga (respeita o pedido explícito do cliente por dado fresco).
         if ctx_bypass() {
             let v = init.await?;
-            self.inner.insert(key, CacheValue::new(v.clone(), ttl)).await;
-            self.note(false);
-            return Ok(v);
+            let cv = CacheValue::new(v, ttl);
+            self.store(&key, &cv).await;
+            self.note(Hit::Miss);
+            return Ok((*cv.value).clone());
         }
 
-        let entry = self
-            .inner
+        let key2 = key.clone();
+        let res = self
+            .fresh
             .entry_by_ref(&key)
             .or_try_insert_with(async move { init.await.map(|v| CacheValue::new(v, ttl)) })
-            .await
-            .map_err(|e: Arc<AppError>| (*e).clone())?;
+            .await;
 
-        // `is_fresh()` => acabou de ser computado (MISS); senão veio do cache (HIT).
-        self.note(!entry.is_fresh());
-        Ok(entry.into_value().value)
+        match res {
+            Ok(entry) => {
+                let recem = entry.is_fresh();
+                let cv = entry.into_value();
+                if recem {
+                    // MISS: acabou de buscar — espelha no cache de stale.
+                    if let Some(st) = &self.stale {
+                        st.insert(key2, cv.clone()).await;
+                    }
+                    self.note(Hit::Miss);
+                } else {
+                    self.note(Hit::Fresh);
+                }
+                Ok((*cv.value).clone())
+            }
+            Err(err) => {
+                // Falha de infraestrutura: tenta servir o último valor bom.
+                if err.permite_stale() {
+                    if let Some(st) = &self.stale {
+                        if let Some(cv) = st.get(&key2).await {
+                            self.note(Hit::Stale);
+                            return Ok((*cv.value).clone());
+                        }
+                    }
+                }
+                self.note(Hit::Miss);
+                Err((*err).clone())
+            }
+        }
     }
 
-    /// Registra hit/miss nos contadores globais e na estatística da requisição.
-    fn note(&self, hit: bool) {
-        if hit {
-            self.hits.fetch_add(1, Ordering::Relaxed);
-        } else {
-            self.misses.fetch_add(1, Ordering::Relaxed);
+    /// Escreve nos caches `fresh` e `stale` (compartilhando o `Arc`).
+    async fn store(&self, key: &str, cv: &CacheValue) {
+        self.fresh.insert(key.to_string(), cv.clone()).await;
+        if let Some(st) = &self.stale {
+            st.insert(key.to_string(), cv.clone()).await;
         }
+    }
+
+    /// Registra o resultado nos contadores globais e na estatística da requisição.
+    fn note(&self, hit: Hit) {
+        let global = match hit {
+            Hit::Fresh => &self.hits,
+            Hit::Miss => &self.misses,
+            Hit::Stale => &self.stales,
+        };
+        global.fetch_add(1, Ordering::Relaxed);
         let _ = REQ.try_with(|s| {
-            let counter = if hit { &s.stats.hits } else { &s.stats.misses };
+            let counter = match hit {
+                Hit::Fresh => &s.stats.hits,
+                Hit::Miss => &s.stats.misses,
+                Hit::Stale => &s.stats.stales,
+            };
             counter.fetch_add(1, Ordering::Relaxed);
         });
     }
@@ -145,10 +217,12 @@ impl SeiCache {
     pub fn stats_json(&self) -> Value {
         json!({
             "enabled": self.enabled,
-            "entradas": self.inner.entry_count(),
-            "bytes": self.inner.weighted_size(),
+            "entradas": self.fresh.entry_count(),
+            "bytes": self.fresh.weighted_size(),
             "hits": self.hits.load(Ordering::Relaxed),
             "misses": self.misses.load(Ordering::Relaxed),
+            "stale": self.stales.load(Ordering::Relaxed),
+            "stale_habilitado": self.stale.is_some(),
         })
     }
 }
@@ -160,7 +234,11 @@ impl CacheValue {
             .map(|s| s.len())
             .unwrap_or(0)
             .min(u32::MAX as usize) as u32;
-        CacheValue { value, ttl, bytes }
+        CacheValue {
+            value: Arc::new(value),
+            ttl,
+            bytes,
+        }
     }
 }
 
@@ -194,6 +272,7 @@ fn encode_params(extra: &[(&str, Param)]) -> String {
 struct ReqStats {
     hits: AtomicU64,
     misses: AtomicU64,
+    stales: AtomicU64,
 }
 
 struct ReqCtx {
@@ -210,7 +289,7 @@ fn ctx_bypass() -> bool {
 }
 
 /// Middleware: lê `Cache-Control` (bypass), abre o escopo do contexto por toda a
-/// execução do handler e, ao final, anota `X-Cache: HIT|MISS|PARTIAL`.
+/// execução do handler e, ao final, anota `X-Cache: HIT|MISS|STALE|PARTIAL`.
 pub async fn middleware(
     req: axum::extract::Request,
     next: axum::middleware::Next,
@@ -236,11 +315,18 @@ pub async fn middleware(
 
     let h = stats.hits.load(Ordering::Relaxed);
     let m = stats.misses.load(Ordering::Relaxed);
-    let label = match (h, m) {
-        (0, 0) => None,
-        (_, 0) => Some("HIT"),
-        (0, _) => Some("MISS"),
-        _ => Some("PARTIAL"),
+    let s = stats.stales.load(Ordering::Relaxed);
+    let total = h + m + s;
+    let label = if total == 0 {
+        None
+    } else if h == total {
+        Some("HIT")
+    } else if m == total {
+        Some("MISS")
+    } else if s == total {
+        Some("STALE")
+    } else {
+        Some("PARTIAL")
     };
     if let Some(l) = label {
         resp.headers_mut()
@@ -252,6 +338,17 @@ pub async fn middleware(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn cfg_para_teste(ttl_dinamico: Duration, stale_ttl: Duration) -> CacheConfig {
+        CacheConfig {
+            enabled: true,
+            max_bytes: 8 * 1024 * 1024,
+            ttl_estatico: Duration::from_secs(60),
+            ttl_semi: Duration::from_secs(60),
+            ttl_dinamico,
+            stale_ttl,
+        }
+    }
 
     #[test]
     fn chave_ignora_ordem_e_distingue_operacao() {
@@ -270,5 +367,47 @@ mod tests {
         let s = key_sei("listarPermissao", false, &[("X", Param::Scalar("1".into()))]);
         let p = key_sip("listarPermissao", &[("X", Param::Scalar("1".into()))]);
         assert_ne!(s, p);
+    }
+
+    #[tokio::test]
+    async fn serve_stale_em_falha_de_infra_mas_propaga_fault() {
+        let ttl = Duration::from_millis(50);
+        let c = SeiCache::new(&cfg_para_teste(ttl, Duration::from_secs(60)));
+
+        // 1) sucesso: popula fresh + stale
+        let v1 = c
+            .get_or_fetch("k".into(), ttl, async { Ok(json!({"x": 1})) })
+            .await
+            .unwrap();
+        assert_eq!(v1, json!({"x": 1}));
+
+        // espera o fresh expirar
+        tokio::time::sleep(Duration::from_millis(150)).await;
+
+        // 2) falha de infra (Timeout) -> serve o último valor bom (stale)
+        let v2 = c
+            .get_or_fetch("k".into(), ttl, async { Err(AppError::Timeout) })
+            .await
+            .unwrap();
+        assert_eq!(v2, json!({"x": 1}), "deve servir o último valor bom");
+
+        // 3) SOAP Fault NÃO serve stale -> propaga o erro
+        tokio::time::sleep(Duration::from_millis(150)).await;
+        let r3 = c
+            .get_or_fetch("k".into(), ttl, async {
+                Err(AppError::SoapFault { code: "1".into(), string: "x".into() })
+            })
+            .await;
+        assert!(r3.is_err(), "fault não deve ser mascarado por stale");
+    }
+
+    #[tokio::test]
+    async fn stale_desligado_propaga_erro() {
+        let ttl = Duration::from_millis(50);
+        let c = SeiCache::new(&cfg_para_teste(ttl, Duration::ZERO)); // stale off
+        let _ = c.get_or_fetch("k".into(), ttl, async { Ok(json!(1)) }).await.unwrap();
+        tokio::time::sleep(Duration::from_millis(150)).await;
+        let r = c.get_or_fetch("k".into(), ttl, async { Err(AppError::SeiUnavailable) }).await;
+        assert!(r.is_err(), "sem stale, erro de infra propaga");
     }
 }

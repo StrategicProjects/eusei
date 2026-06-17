@@ -36,6 +36,16 @@ pub enum AppError {
 }
 
 impl AppError {
+    /// Indica se vale servir um valor cacheado obsoleto (serve-stale) diante deste
+    /// erro: só para falhas de **infraestrutura** do SEI (indisponível/timeout/HTTP/
+    /// parse), nunca para SOAP Fault (resposta semântica) nem erros de cliente.
+    pub fn permite_stale(&self) -> bool {
+        matches!(
+            self,
+            AppError::SeiUnavailable | AppError::Timeout | AppError::Upstream(_) | AppError::Parse(_)
+        )
+    }
+
     /// Código estável legível por máquina, para o cliente tratar.
     fn codigo(&self) -> &'static str {
         match self {
