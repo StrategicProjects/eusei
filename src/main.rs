@@ -4,6 +4,7 @@
 
 mod app;
 mod auth;
+mod cache;
 mod config;
 mod docs;
 mod error;
@@ -43,9 +44,11 @@ async fn main() {
         .parse()
         .unwrap_or_else(|e| panic!("EUSEI_BIND inválido ({}): {e}", cfg.bind));
 
+    let cache = cache::SeiCache::new(&cfg.cache);
     let state = AppState {
         cfg: Arc::new(cfg),
         http: reqwest::Client::new(),
+        cache,
     };
 
     let sei_url = state.cfg.sei.url.clone();

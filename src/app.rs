@@ -1,15 +1,17 @@
 //! Montagem do router HTTP. Separado de `main.rs` para permitir testes de rota
 //! in-process (sem abrir porta para a aplicação).
 
-use axum::{middleware, routing::get, Json, Router};
+use axum::{extract::State, middleware, routing::get, Json, Router};
 use serde_json::json;
 
-use crate::{auth, docs, routes, state::AppState};
+use crate::{auth, cache, docs, routes, state::AppState};
 
 /// Monta o router completo: rotas públicas (landing, docs, assets, health) e as
 /// protegidas sob `/v1` (Bearer obrigatório).
 pub fn build_app(state: AppState) -> Router {
     let protected = routes::router()
+        // cache: contexto por requisição (bypass + X-Cache), por dentro do auth
+        .route_layer(middleware::from_fn(cache::middleware))
         .route_layer(middleware::from_fn_with_state(state.clone(), auth::require_bearer));
 
     Router::new()
@@ -31,8 +33,13 @@ pub fn build_app(state: AppState) -> Router {
         .with_state(state)
 }
 
-pub async fn health() -> Json<serde_json::Value> {
-    Json(json!({ "ok": true, "service": "eusei", "version": env!("CARGO_PKG_VERSION") }))
+pub async fn health(State(s): State<AppState>) -> Json<serde_json::Value> {
+    Json(json!({
+        "ok": true,
+        "service": "eusei",
+        "version": env!("CARGO_PKG_VERSION"),
+        "cache": s.cache.stats_json(),
+    }))
 }
 
 #[cfg(test)]
@@ -96,7 +103,45 @@ mod tests {
     const SOAP_ANDAMENTOS: &str = r#"<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><Resp><parametros><item><IdAndamento>13</IdAndamento><DataHora>30/06/2022 13:56:27</DataHora><Descricao>Gerado documento 84230597</Descricao></item></parametros></Resp></soap:Body></soap:Envelope>"#;
     const SOAP_SIP_RETURN: &str = r#"<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><Resp><returnPermissoes><item><IdUsuario>42</IdUsuario></item></returnPermissoes></Resp></soap:Body></soap:Envelope>"#;
 
+    /// Mock do SEI que conta quantas requisições POST recebeu (para testar cache).
+    /// Responde sempre a lista de exemplo — basta para `/v1/paises`.
+    async fn mock_sei_contado() -> (String, std::sync::Arc<std::sync::atomic::AtomicUsize>) {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        let count = std::sync::Arc::new(AtomicUsize::new(0));
+        let c = count.clone();
+        let app = Router::new().route(
+            "/",
+            axum::routing::post(move |_body: String| {
+                let c = c.clone();
+                async move {
+                    c.fetch_add(1, Ordering::SeqCst);
+                    axum::response::Response::builder()
+                        .header(axum::http::header::CONTENT_TYPE, "text/xml")
+                        .body(Body::from(SOAP_LISTA.to_string()))
+                        .unwrap()
+                }
+            }),
+        );
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        tokio::spawn(async move {
+            axum::serve(listener, app).await.unwrap();
+        });
+        (format!("http://{addr}/"), count)
+    }
+
+    fn cache_cfg() -> crate::config::CacheConfig {
+        crate::config::CacheConfig {
+            enabled: true,
+            max_bytes: 32 * 1024 * 1024,
+            ttl_estatico: std::time::Duration::from_secs(3600),
+            ttl_semi: std::time::Duration::from_secs(600),
+            ttl_dinamico: std::time::Duration::from_secs(30),
+        }
+    }
+
     fn state_com(sei_url: String, sip: SipConfig) -> AppState {
+        let cc = cache_cfg();
         AppState {
             cfg: Arc::new(AppConfig {
                 bind: "127.0.0.1:0".into(),
@@ -111,9 +156,11 @@ mod tests {
                     andamentos_conc: 4,
                 },
                 sip,
+                cache: cc.clone(),
                 log_filter: "off".into(),
             }),
             http: reqwest::Client::new(),
+            cache: crate::cache::SeiCache::new(&cc),
         }
     }
 
@@ -267,6 +314,60 @@ mod tests {
         // conforme a serialização do axum).
         assert!(texto.contains("progresso"), "deve emitir progresso; corpo: {texto}");
         assert!(texto.contains("concluido"), "deve emitir concluido; corpo: {texto}");
+    }
+
+    #[tokio::test]
+    async fn cache_evita_segunda_chamada_e_marca_x_cache() {
+        use std::sync::atomic::Ordering;
+        let (url, count) = mock_sei_contado().await;
+        let app = build_app(state_com(url, sip_off()));
+        let pedir = |cc: Option<&str>| {
+            let mut b = Request::builder()
+                .uri("/v1/paises")
+                .header("Authorization", format!("Bearer {TOKEN}"));
+            if let Some(v) = cc {
+                b = b.header("Cache-Control", v);
+            }
+            b.body(Body::empty()).unwrap()
+        };
+        // 1ª: MISS (vai ao SEI)
+        let r1 = app.clone().oneshot(pedir(None)).await.unwrap();
+        assert_eq!(r1.status(), StatusCode::OK);
+        assert_eq!(r1.headers().get("x-cache").and_then(|v| v.to_str().ok()), Some("MISS"));
+        // 2ª: HIT (servida do cache, sem nova chamada)
+        let r2 = app.clone().oneshot(pedir(None)).await.unwrap();
+        assert_eq!(r2.headers().get("x-cache").and_then(|v| v.to_str().ok()), Some("HIT"));
+        assert_eq!(count.load(Ordering::SeqCst), 1, "SEI chamado uma única vez");
+    }
+
+    #[tokio::test]
+    async fn cache_bypass_com_no_cache_revalida() {
+        use std::sync::atomic::Ordering;
+        let (url, count) = mock_sei_contado().await;
+        let app = build_app(state_com(url, sip_off()));
+        let auth = format!("Bearer {TOKEN}");
+        // popula o cache
+        let r1 = app
+            .clone()
+            .oneshot(Request::builder().uri("/v1/paises").header("Authorization", &auth).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(r1.status(), StatusCode::OK);
+        // Cache-Control: no-cache força nova ida ao SEI
+        let r2 = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/v1/paises")
+                    .header("Authorization", &auth)
+                    .header("Cache-Control", "no-cache")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(r2.headers().get("x-cache").and_then(|v| v.to_str().ok()), Some("MISS"));
+        assert_eq!(count.load(Ordering::SeqCst), 2, "no-cache revalida no SEI");
     }
 
     #[tokio::test]

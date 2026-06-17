@@ -4,6 +4,7 @@
 
 use std::env;
 use std::fmt;
+use std::time::Duration;
 
 /// Mascara um segredo para logs: mostra só o tamanho, nunca o valor.
 fn redigido(s: &str) -> String {
@@ -24,8 +25,26 @@ pub struct AppConfig {
     pub sei: SeiConfig,
     /// Configuração de acesso ao SIP (opcional).
     pub sip: SipConfig,
+    /// Configuração do cache em memória das respostas do SEI.
+    pub cache: CacheConfig,
     /// Filtro de log (RUST_LOG), guardado para referência.
     pub log_filter: String,
+}
+
+/// Cache em memória das respostas do SEI (read-only): TTL por classe de operação
+/// + teto de memória. Reduz latência e protege o SEI (single-flight). Ver `cache.rs`.
+#[derive(Clone, Debug)]
+pub struct CacheConfig {
+    /// Liga/desliga o cache por completo (`EUSEI_CACHE=off`).
+    pub enabled: bool,
+    /// Teto de memória do cache, em bytes (peso = tamanho do JSON).
+    pub max_bytes: u64,
+    /// TTL de listas quase-estáticas (países, séries, tipos…).
+    pub ttl_estatico: Duration,
+    /// TTL de dados semi-dinâmicos (usuários, contatos, permissões).
+    pub ttl_semi: Duration,
+    /// TTL de dados de processo (consultas, andamentos) — curto (frescor).
+    pub ttl_dinamico: Duration,
 }
 
 #[derive(Clone)]
@@ -61,6 +80,7 @@ impl fmt::Debug for AppConfig {
             .field("tokens", &format_args!("[{} token(s) ***]", self.tokens.len()))
             .field("sei", &self.sei)
             .field("sip", &self.sip)
+            .field("cache", &self.cache)
             .field("log_filter", &self.log_filter)
             .finish()
     }
@@ -143,6 +163,25 @@ impl AppConfig {
             .filter(|n| *n > 0)
             .ok_or("SEI_ANDAMENTOS_CONC inválido (esperado inteiro > 0).".to_string())?;
 
+        // Cache em memória. Desligado com EUSEI_CACHE em {off,0,false,no}.
+        let cache_enabled = !matches!(
+            get("EUSEI_CACHE", "on").to_ascii_lowercase().as_str(),
+            "off" | "0" | "false" | "no"
+        );
+        let dur_secs = |key: &str, default: u64| -> Duration {
+            Duration::from_secs(get(key, &default.to_string()).parse().unwrap_or(default))
+        };
+        let cache = CacheConfig {
+            enabled: cache_enabled,
+            max_bytes: get("EUSEI_CACHE_MAX_MB", "256")
+                .parse::<u64>()
+                .unwrap_or(256)
+                .saturating_mul(1024 * 1024),
+            ttl_estatico: dur_secs("EUSEI_CACHE_TTL_ESTATICO_SECS", 21_600), // 6h
+            ttl_semi: dur_secs("EUSEI_CACHE_TTL_SEMI_SECS", 600),            // 10min
+            ttl_dinamico: dur_secs("EUSEI_CACHE_TTL_DINAMICO_SECS", 30),     // 30s
+        };
+
         Ok(AppConfig {
             bind: get("EUSEI_BIND", "127.0.0.1:18088"),
             tokens,
@@ -163,6 +202,7 @@ impl AppConfig {
                 chave_acesso: get("SEI_SIP_CHAVE_ACESSO", ""),
                 id_sistema: get("SEI_SIP_ID_SISTEMA", ""),
             },
+            cache,
             log_filter: get("RUST_LOG", "eusei=info,tower_http=info"),
         })
     }
@@ -190,6 +230,13 @@ mod tests {
                 url: "https://exemplo/sip".into(),
                 chave_acesso: "chave-sip-secreta".into(),
                 id_sistema: "SIP".into(),
+            },
+            cache: CacheConfig {
+                enabled: true,
+                max_bytes: 64 * 1024 * 1024,
+                ttl_estatico: Duration::from_secs(21_600),
+                ttl_semi: Duration::from_secs(600),
+                ttl_dinamico: Duration::from_secs(30),
             },
             log_filter: "eusei=info".into(),
         };

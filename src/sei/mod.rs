@@ -66,28 +66,44 @@ pub async fn call_with(
     include_unidade: bool,
     extra: Vec<(&str, Param)>,
 ) -> Result<Value, AppError> {
-    let cfg = &state.cfg.sei;
-    let mut params: Vec<(&str, Param)> = vec![
-        ("SiglaSistema", Param::Scalar(cfg.sigla_sistema.clone())),
-        ("IdentificacaoServico", Param::Scalar(cfg.identificacao_servico.clone())),
-    ];
-    if include_unidade {
-        params.push(("IdUnidade", Param::Scalar(cfg.id_unidade.clone())));
-    }
-    params.extend(extra);
+    let key = crate::cache::key_sei(operation, include_unidade, &extra);
+    let ttl = state.cache.ttl_for(operation);
 
-    let body = soap::client::soap_call(
-        &state.http,
-        &cfg.url,
-        cfg.timeout_secs,
-        operation,
-        &params,
-        "sei",
-        "Sei",
-        "SeiAction",
-    )
-    .await?;
-    soap::parse::parametros_to_json(&body)
+    // Tudo o que o fetch precisa é movido (estado é Arc/Client; chaves dos params
+    // viram `String`) para o futuro de init ser `'static` (exigência do moka).
+    let st = state.clone();
+    let op = operation.to_string();
+    let extra_owned: Vec<(String, Param)> =
+        extra.into_iter().map(|(k, v)| (k.to_string(), v)).collect();
+
+    state
+        .cache
+        .get_or_fetch(key, ttl, async move {
+            let cfg = &st.cfg.sei;
+            let mut params: Vec<(&str, Param)> = vec![
+                ("SiglaSistema", Param::Scalar(cfg.sigla_sistema.clone())),
+                ("IdentificacaoServico", Param::Scalar(cfg.identificacao_servico.clone())),
+            ];
+            if include_unidade {
+                params.push(("IdUnidade", Param::Scalar(cfg.id_unidade.clone())));
+            }
+            for (k, v) in &extra_owned {
+                params.push((k.as_str(), v.clone()));
+            }
+            let body = soap::client::soap_call(
+                &st.http,
+                &cfg.url,
+                cfg.timeout_secs,
+                &op,
+                &params,
+                "sei",
+                "Sei",
+                "SeiAction",
+            )
+            .await?;
+            soap::parse::parametros_to_json(&body)
+        })
+        .await
 }
 
 /// Executa uma operação read-only do SIP (namespace "sip"/"sipns").
@@ -106,22 +122,37 @@ pub async fn sip_call(
                 .into(),
         ));
     }
-    let mut params: Vec<(&str, Param)> = vec![
-        ("ChaveAcesso", Param::Scalar(sip.chave_acesso.clone())),
-        ("IdSistema", Param::Scalar(sip.id_sistema.clone())),
-    ];
-    params.extend(extra);
+    let key = crate::cache::key_sip(operation, &extra);
+    let ttl = state.cache.ttl_for(operation);
 
-    let body = soap::client::soap_call(
-        &state.http,
-        &sip.url,
-        state.cfg.sei.timeout_secs,
-        operation,
-        &params,
-        "sip",
-        "sipns",
-        "sipnsAction",
-    )
-    .await?;
-    soap::parse::return_to_json(&body)
+    let st = state.clone();
+    let op = operation.to_string();
+    let extra_owned: Vec<(String, Param)> =
+        extra.into_iter().map(|(k, v)| (k.to_string(), v)).collect();
+
+    state
+        .cache
+        .get_or_fetch(key, ttl, async move {
+            let sip = &st.cfg.sip;
+            let mut params: Vec<(&str, Param)> = vec![
+                ("ChaveAcesso", Param::Scalar(sip.chave_acesso.clone())),
+                ("IdSistema", Param::Scalar(sip.id_sistema.clone())),
+            ];
+            for (k, v) in &extra_owned {
+                params.push((k.as_str(), v.clone()));
+            }
+            let body = soap::client::soap_call(
+                &st.http,
+                &sip.url,
+                st.cfg.sei.timeout_secs,
+                &op,
+                &params,
+                "sip",
+                "sipns",
+                "sipnsAction",
+            )
+            .await?;
+            soap::parse::return_to_json(&body)
+        })
+        .await
 }

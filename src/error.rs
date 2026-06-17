@@ -7,7 +7,7 @@ use axum::{
 };
 use serde_json::json;
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Clone)]
 pub enum AppError {
     #[error("não autorizado")]
     Unauthorized,
