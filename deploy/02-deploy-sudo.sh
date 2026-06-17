@@ -60,7 +60,9 @@ GEN_TOKEN=""
 CONFIG_INCOMPLETA=0
 if [[ ! -f /etc/eusei.env ]]; then
   # Gera um token aleatório no install (sem janela de credencial padrão).
-  GEN_TOKEN="$(head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | cut -c1-43)"
+  # 64 bytes de entropia antes do filtro garantem >= 43 chars alfanuméricos
+  # (tr remove +,/,= do base64, então 32 bytes às vezes rendiam menos que 43).
+  GEN_TOKEN="$(head -c 64 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | cut -c1-43)"
   cat > /etc/eusei.env <<ENV
 EUSEI_BIND=127.0.0.1:18088
 EUSEI_TOKENS=${GEN_TOKEN}
