@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "eusei — API dos Web Services do SEI",
-    "version": "0.5.3",
+    "version": "0.5.4",
     "x-logo": {
       "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NCIgaGVpZ2h0PSI0NCIgdmlld0JveD0iMCAwIDQ0IDQ0Ij48cmVjdCB3aWR0aD0iNDQiIGhlaWdodD0iNDQiIHJ4PSIxMSIgZmlsbD0iIzBFNkU1QyIvPjxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0Y0RUZFMyIgc3Ryb2tlLXdpZHRoPSIyLjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PHBhdGggZD0iTTEzIDE2SDMxIi8+PHBhdGggZD0iTTEzIDIySDI3Ii8+PHBhdGggZD0iTTEzIDI4SDIzIi8+PC9nPjxjaXJjbGUgY3g9IjMxLjUiIGN5PSIyOCIgcj0iMi42IiBmaWxsPSIjRThCMjNBIi8+PC9zdmc+",
       "altText": "eusei",
