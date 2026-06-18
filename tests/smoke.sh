@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# eusei — testes rápidos via curl, com números de processo/documento reais.
+# eusei — testes rápidos via curl.
 #
 # Uso:
 #   EUSEI_TOKEN=seu-token bash tests/smoke.sh
 #   EUSEI_TOKEN=... EUSEI_BASE=http://127.0.0.1:18088 bash tests/smoke.sh   # interno no servidor
+#   # para um teste real, informe um processo/documento seus:
+#   EUSEI_TOKEN=... EUSEI_SMOKE_PROTO=0000000000.000000/2024-00 EUSEI_SMOKE_DOC=12345678 bash tests/smoke.sh
 #
 # Requer: curl. (jq é opcional — se existir, o JSON sai formatado.)
 
@@ -12,9 +14,11 @@ BASE="${EUSEI_BASE:-http://127.0.0.1:18088}"   # ajuste p/ a URL pública: EUSEI
 TOKEN="${EUSEI_TOKEN:?defina EUSEI_TOKEN=...}"
 AUTH=(-H "Authorization: Bearer ${TOKEN}")
 
-# dados reais (processo de licitação já validado)
-PROTO="0011108545.000056/2022-49"
-DOC="25833665"     # documento real desse processo (Anexo)
+# Processo/documento da sondagem: defina os seus via env (sem reais embutidos no
+# repo, para reduzir exposição/risco LGPD). Os defaults são placeholders e
+# retornam SOAP Fault de "não encontrado" — bom para exercitar o caminho de erro.
+PROTO="${EUSEI_SMOKE_PROTO:-0000000000.000000/2099-99}"
+DOC="${EUSEI_SMOKE_DOC:-0}"
 
 pp() { if command -v jq >/dev/null 2>&1; then jq .; else cat; echo; fi; }
 hr() { printf '\n\033[1m== %s ==\033[0m\n' "$1"; }

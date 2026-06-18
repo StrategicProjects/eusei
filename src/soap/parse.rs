@@ -127,7 +127,7 @@ mod tests {
     fn procedimento_vira_objeto() {
         let xml = include_str!("../../tests/fixtures/consultarProcedimento.xml");
         let v = parametros_to_json(xml).unwrap();
-        assert_eq!(v["ProcedimentoFormatado"], "0011108545.000056/2022-49");
+        assert_eq!(v["ProcedimentoFormatado"], "0000000000.000000/2022-00");
         assert_eq!(v["TipoProcedimento"]["Nome"], "Licitação: Tomada de Preços");
         // AndamentoConclusao é xsi:nil -> null
         assert_eq!(v["AndamentoConclusao"], Value::Null);
