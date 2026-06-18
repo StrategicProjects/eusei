@@ -122,10 +122,11 @@
           <h3 class="font-display text-xl font-semibold">Andamentos</h3>
           <ul class="mt-4 space-y-2 font-mono text-sm text-muted">
             <li><span class="text-pine">GET</span> /v1/andamentos</li>
+            <li><span class="text-pine">GET</span> /v1/andamentos/stream <span class="text-muted/60">(SSE)</span></li>
             <li><span class="text-pine">GET</span> /v1/documentos-processo</li>
             <li><span class="text-pine">GET</span> /v1/publicacoes-processo</li>
           </ul>
-          <p class="text-sm text-muted mt-4 leading-relaxed font-sans">Linha do tempo completa do processo, os documentos derivados dela e suas publicações.</p>
+          <p class="text-sm text-muted mt-4 leading-relaxed font-sans">Linha do tempo completa do processo (com progresso ao vivo via SSE), os documentos derivados dela e suas publicações. Respostas cacheadas, com <span class="font-mono text-xs">X-Cache</span>/<span class="font-mono text-xs">Cache-Control</span>.</p>
         </div>
         <div class="rounded-2xl border border-ink/8 bg-white/50 p-6 hover:border-pine/30 hover:shadow-lg hover:shadow-pine/5 transition">
           <h3 class="font-display text-xl font-semibold">Listas</h3>
