@@ -1,0 +1,39 @@
+{
+  "title": "eusei: an HTTP/JSON API (Rust + axum) for the SEI SOAP Web Services",
+  "description": "<p>eusei translates the SOAP Web Services of Brazil's SEI (Sistema Eletrônico de Informações) into a clean HTTP/JSON API, written in Rust with axum. It exposes read-only queries over processes, documents, publications, blocks, proceedings and 15 auxiliary lists, mirroring the queries of the R package <a href=\"https://github.com/StrategicProjects/rsei\">rsei</a>. It is a single self-contained binary that also serves its landing page and documentation (Tailwind CSS v4, vendored, no CDN), authenticates clients with a Bearer token, and never exposes the SEI key to the caller.</p>",
+  "upload_type": "software",
+  "language": "eng",
+  "license": "GPL-3.0-or-later",
+  "access_right": "open",
+  "keywords": [
+    "sei",
+    "soap",
+    "web-services",
+    "http-api",
+    "json",
+    "rust",
+    "axum",
+    "government",
+    "brazil",
+    "rsei"
+  ],
+  "creators": [
+    {
+      "name": "Leite, André",
+      "affiliation": "Universidade Federal de Pernambuco",
+      "orcid": "0000-0002-4718-9766"
+    }
+  ],
+  "related_identifiers": [
+    {
+      "relation": "isSupplementTo",
+      "identifier": "https://github.com/StrategicProjects/eusei",
+      "scheme": "url"
+    },
+    {
+      "relation": "references",
+      "identifier": "https://github.com/StrategicProjects/rsei",
+      "scheme": "url"
+    }
+  ]
+}

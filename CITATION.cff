@@ -1,0 +1,38 @@
+cff-version: 1.2.0
+message: "If you use eusei, please cite it using this metadata."
+title: "eusei: an HTTP/JSON API (Rust + axum) for the SEI SOAP Web Services"
+type: software
+version: 0.5.5
+doi: ZENODO_DOI_HERE
+license: GPL-3.0-or-later
+repository-code: "https://github.com/StrategicProjects/eusei"
+url: "https://github.com/StrategicProjects/eusei"
+keywords:
+  - sei
+  - soap
+  - web-services
+  - http-api
+  - json
+  - rust
+  - axum
+  - government
+  - brazil
+  - rsei
+identifiers:
+  - type: doi
+    value: ZENODO_DOI_HERE
+    description: "Concept DOI — always resolves to the latest release"
+authors:
+  - given-names: André
+    family-names: Leite
+    email: leite@castlab.org
+    affiliation: Universidade Federal de Pernambuco
+    orcid: "https://orcid.org/0000-0002-4718-9766"
+abstract: >-
+  eusei translates the SOAP Web Services of Brazil's SEI (Sistema Eletrônico de
+  Informações) into a clean HTTP/JSON API, written in Rust with axum. It exposes
+  read-only queries over processes, documents, publications, blocks, proceedings
+  and 15 auxiliary lists, mirroring the R package rsei. It ships as a single
+  self-contained binary that also serves its landing page and documentation
+  (Tailwind CSS v4, vendored), authenticates clients with a Bearer token, and
+  never exposes the SEI key to the caller.
