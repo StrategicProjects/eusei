@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use eusei, please cite it using this metadata."
 title: "eusei: an HTTP/JSON API (Rust + axum) for the SEI SOAP Web Services"
 type: software
-version: 0.5.5
+version: 0.5.6
 doi: ZENODO_DOI_HERE
 license: GPL-3.0-or-later
 repository-code: "https://github.com/StrategicProjects/eusei"
