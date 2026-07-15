@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/rust-1.96-0b5848" alt="rust"/>
   <img src="https://img.shields.io/badge/api-read--only-0e6e5c" alt="read-only"/>
   <img src="https://img.shields.io/badge/license-GPL--3.0-555" alt="license"/>
-  <a href="https://doi.org/ZENODO_DOI_HERE"><img src="https://img.shields.io/badge/DOI-ZENODO_DOI_HERE-blue.svg" alt="DOI"/></a>
+  <a href="https://doi.org/10.5281/zenodo.21366552"><img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21366552-blue.svg" alt="DOI"/></a>
 </p>
 
 <p align="center">
@@ -233,8 +233,8 @@ cd /tmp && npm i tailwindcss @tailwindcss/cli && \
 ## Como citar
 
 Se você usar o `eusei` em trabalho acadêmico, cite-o pelo seu
-[registro no Zenodo](https://doi.org/ZENODO_DOI_HERE). O *concept DOI*
-[ZENODO_DOI_HERE](https://doi.org/ZENODO_DOI_HERE) sempre resolve para o último
+[registro no Zenodo](https://doi.org/10.5281/zenodo.21366552). O *concept DOI*
+[10.5281/zenodo.21366552](https://doi.org/10.5281/zenodo.21366552) sempre resolve para o último
 release; cada versão também tem o seu próprio DOI. O “Cite this repository” do
 GitHub lê o [`CITATION.cff`](CITATION.cff) (BibTeX/APA).
 
@@ -243,7 +243,7 @@ GitHub lê o [`CITATION.cff`](CITATION.cff) (BibTeX/APA).
   author    = {Leite, André},
   title     = {{eusei: an HTTP/JSON API (Rust + axum) for the SEI SOAP Web Services}},
   publisher = {Zenodo},
-  doi       = {ZENODO_DOI_HERE},
+  doi       = {10.5281/zenodo.21366552},
   url       = {https://github.com/StrategicProjects/eusei}
 }
 ```

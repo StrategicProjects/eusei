@@ -3,7 +3,7 @@ message: "If you use eusei, please cite it using this metadata."
 title: "eusei: an HTTP/JSON API (Rust + axum) for the SEI SOAP Web Services"
 type: software
 version: 0.5.6
-doi: ZENODO_DOI_HERE
+doi: 10.5281/zenodo.21366552
 license: GPL-3.0-or-later
 repository-code: "https://github.com/StrategicProjects/eusei"
 url: "https://github.com/StrategicProjects/eusei"
@@ -20,7 +20,7 @@ keywords:
   - rsei
 identifiers:
   - type: doi
-    value: ZENODO_DOI_HERE
+    value: 10.5281/zenodo.21366552
     description: "Concept DOI — always resolves to the latest release"
 authors:
   - given-names: André
